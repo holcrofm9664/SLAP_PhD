@@ -36,3 +36,6 @@ Thumbs.db
 
 # Your project-specific
 **/.ipynb_checkpoints/
+
+# Jupyter Notebook used for messing around/trying new code
+Messing_Around.ipynb
