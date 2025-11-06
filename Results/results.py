@@ -12,35 +12,7 @@ class Model_Results:
     def summary(self):
         return f"Model {self.name} achieves a distance of {self.distance} with a runtime of {self.runtime}"
     
-def compare_two_models(model1, model2, instance: InstanceData):
-    """
-    Inputs:
-
-    - model1: the first model whose performance we wish to test
-    - model2: the second model whose performance we wish to test
-    - instance: the instance on which the performance of both models will be tested
-    
-    """
-
-    name1 = model1.__name__
-    name2 = model2.__name__
-
-    status1, distance1, runtime1, assignments1 = model1(instance[0],
-                                                        instance[1],
-                                                        instance[2],
-                                                        instance[3],
-                                                        instance[4],
-                                                        instance[5])
-    
-    status2, distance2, runtime2, assignments2 = model2(instance[0],
-                                                        instance[1],
-                                                        instance[2],
-                                                        instance[3],
-                                                        instance[4],
-                                                        instance[5])
-
-
-    class Compare_Model_Results:
+class Compare_Model_Results:
         def __init__(self, model1, model2):
             self.model1 = model1
             self.model2 = model2
@@ -110,6 +82,35 @@ def compare_two_models(model1, model2, instance: InstanceData):
                 return f"The {self.model1.name} model has a runtime of {round(self.model1.runtime, 2)} seconds, compared to a runtime of {round(self.model2.runtime, 2)} seconds for the {self.model2.name} model. Hence, the {self.model1.name} model is {round(self.model2.runtime - self.model1.runtime, 2)} seconds faster, a {round(((self.model2.runtime - self.model1.runtime)/self.model2.runtime)*100, 2)}% reduction in runtime."
             elif self.model1.runtime > self.model2.runtime:
                 return f"The {self.model1.name} model has a runtime of {round(self.model1.runtime, 2)} seconds, compared to a runtime of {round(self.model2.runtime, 2)} seconds for the {self.model2.name} model. Hence, the {self.model2.name} model is {round(self.model1.runtime - self.model2.runtime, 2)} seconds faster, a {round(((self.model1.runtime - self.model2.runtime)/self.model1.runtime)*100, 2)}% reduction in runtime."
+
+
+
+def compare_two_models(model1, model2, instance: InstanceData):
+    """
+    Inputs:
+
+    - model1: the first model whose performance we wish to test
+    - model2: the second model whose performance we wish to test
+    - instance: the instance on which the performance of both models will be tested
+    
+    """
+
+    name1 = model1.__name__
+    name2 = model2.__name__
+
+    status1, distance1, runtime1, assignments1 = model1(instance[0],
+                                                        instance[1],
+                                                        instance[2],
+                                                        instance[3],
+                                                        instance[4],
+                                                        instance[5])
+    
+    status2, distance2, runtime2, assignments2 = model2(instance[0],
+                                                        instance[1],
+                                                        instance[2],
+                                                        instance[3],
+                                                        instance[4],
+                                                        instance[5])
 
     model1 = Model_Results(status1, distance1, runtime1, assignments1, name1)
     model2 = Model_Results(status2, distance2, runtime2, assignments2, name2)
