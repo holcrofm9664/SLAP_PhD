@@ -3,13 +3,7 @@ from gurobipy import GRB
 import numpy as np
 import pandas as pd
 
-def Strict_S_Shape(num_aisles:int, 
-                   num_bays:int, 
-                   slot_capacity:int, 
-                   between_aisle_dist:float, 
-                   between_bay_dist:float, 
-                   orders:dict[int:list]
-                   ) -> tuple[int, float, float, dict]:
+def Strict_S_Shape(**kwargs) -> tuple[int, float, float, dict]:
     """
     Inputs:
     - num_aisles: the number of aisles in the warehouse
@@ -23,6 +17,12 @@ def Strict_S_Shape(num_aisles:int,
     -
 
     """
+    num_aisles = kwargs["num_aisles"]
+    num_bays = kwargs["num_bays"]
+    slot_capacity = kwargs["slot_capacity"]
+    between_aisle_dist = kwargs["between_aisle_dist"]
+    between_bay_dist = kwargs["between_bay_dist"]
+    orders = kwargs["orders"]
 
     all_prods = []
     for i in orders:

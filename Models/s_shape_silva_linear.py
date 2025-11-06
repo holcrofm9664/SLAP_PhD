@@ -3,7 +3,14 @@ from gurobipy import GRB
 
 # creating our model
 
-def S_Shape_Silva_Linear(num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, orders: dict[int:list]):
+def S_Shape_Silva_Linear(**kwargs):
+
+    num_aisles = kwargs["num_aisles"]
+    num_bays = kwargs["num_bays"]
+    slot_capacity = kwargs["slot_capacity"]
+    between_aisle_dist = kwargs["between_aisle_dist"]
+    between_bay_dist = kwargs["between_bay_dist"]
+    orders = kwargs["orders"]
 
     import pandas as pd
 
