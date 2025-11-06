@@ -1,0 +1,38 @@
+# Byte-compiled / optimised / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# VSCode settings
+.vscode/
+
+# Virtual environment folders
+env/
+venv/
+.venv/
+ENV/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Python cache
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+
+# Your project-specific
+**/.ipynb_checkpoints/
