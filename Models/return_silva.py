@@ -5,6 +5,8 @@ from typing import Any, Tuple
 
 def Return(**kwargs:Any) -> Tuple[int, float, float, dict]:
     """
+    The return policy model of Silva et al
+    
     Keyword Args:
         - num_aisles (int): the number of aisles in the instance
         - num_bays (int): the number of bays per aisle in the instance
@@ -12,6 +14,12 @@ def Return(**kwargs:Any) -> Tuple[int, float, float, dict]:
         - between_aisle_dist (float): the distance between consecutive aisles in the warehouse
         - between_bay_dist (float): the distance between consecutive bays in the warehouse
         - orders (dict): the orders in the specific instance
+    
+    Outputs:
+        - status (int): the Gurobi status
+        - distance (float): the final distance found by the model, the model's objective value
+        - runtime (float): the model's runtime
+        - assignment (dict): the final assignment of products to slots
     """
 
     num_aisles = kwargs["num_aisles"]
