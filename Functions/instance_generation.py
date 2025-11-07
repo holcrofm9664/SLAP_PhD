@@ -1,7 +1,22 @@
 from Functions.orders_generation import generate_orders
 
 def generate_instances(A:list, B:list, O:list, Q:list, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float):
+    """
+    Generates all possible combinations of inputs given the user inputs which parameter values they would like to test
 
+    Inputs:
+    - A: a list containing the different aisle numbers that will be tested
+    - B: a list containing the different bay numbers that will be tested
+    - O: a list containing the different numbers of orders that will be tested
+    - Q: a list containing the different order sizes that will be tested
+    - slot_capacity: the capacity of slots in the warehouse. The standard is 2
+    - between_aisle_dist: the distance between two consecutive aisles
+    - between_bay_distance: the distance between two consecutive bays
+
+    Outputs:
+    - combinations: a list of dictionaries, where each dictionary constitutes an instance
+    """
+    
     combinations = []
 
     for a in A:
@@ -22,8 +37,23 @@ def generate_instances(A:list, B:list, O:list, Q:list, slot_capacity:int, betwee
     return combinations
     
 
+
+def generate_single_instance(num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, orders:dict) -> dict:
+    """
+    Generates a single instance given all the relevant inputs
     
-def generate_single_instance(num_aisles, num_bays, slot_capacity, between_aisle_dist, between_bay_dist, orders):
+    Inputs:
+    - num_aisles: the number of aisles in the warehouse
+    - num_bays: the number of bays in the warehouse
+    - slot_capacity: the capacity of slots in the warehouse. The standard is two (one either side of the aisle)
+    - between_aisle_dist: the distance between consecutive aisles
+    - between_bay_dist: the distance between consecutive bays
+    - orders: the dictionary of orders
+    
+    Output:
+    - instance: the instance, given in the form of a dictionary (for easy use with kwargs)
+    """
+    
     instance = {}
     instance["num_aisles"] = num_aisles
     instance["num_bays"] = num_bays
