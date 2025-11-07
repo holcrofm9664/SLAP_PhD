@@ -21,4 +21,15 @@ def generate_instances(A:list, B:list, O:list, Q:list, slot_capacity:int, betwee
     
     return combinations
     
+
     
+def generate_single_instance(num_aisles, num_bays, slot_capacity, between_aisle_dist, between_bay_dist, orders):
+    instance = {}
+    instance["num_aisles"] = num_aisles
+    instance["num_bays"] = num_bays
+    instance["slot_capacity"] = slot_capacity
+    instance["between_aisle_dist"] = between_aisle_dist
+    instance["between_bay_dist"] = between_bay_dist
+    instance["orders"] = orders
+
+    return instance
