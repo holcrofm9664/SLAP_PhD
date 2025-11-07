@@ -1,10 +1,27 @@
 import gurobipy as gp
 from gurobipy import GRB
+from typing import Any, Tuple
 
-# creating our model
 
-def S_Shape_Silva_Linear(**kwargs):
+def S_Shape_Silva_Linear(**kwargs:Any) -> Tuple[int, float, float, dict]:
+    """
+    The S-Shape model of Silva et al
 
+    Keyword Args:
+    - num_aisles (int): the number of aisles in the specific instance
+    - num_bays (int): the number of bays in the specific instance
+    - slot_capacity (int): the capacity of a single slot. The standard is two
+    - between_aisle_dist (float): the distance between two consecutive aisles
+    - between_bay_dis (float): the distance between two consecutive bays
+    - orders (dict): the orders for the specific instance
+    
+    Outputs:
+    - status (int): the status of the gurobi model
+    - distance (float): the distance achieved by the model, taken as the gurobi objective value
+    - runtime (float): the runtime of the model
+    - assignments (dict): the final assignments of products to slots
+    """
+    
     num_aisles = kwargs["num_aisles"]
     num_bays = kwargs["num_bays"]
     slot_capacity = kwargs["slot_capacity"]
