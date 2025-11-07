@@ -1,30 +1,37 @@
-# Return Policy Function
+import gurobipy as gp
+from gurobipy import GRB
+import pandas as pd
+from typing import Any, Tuple
 
-def Return(Orders: dict[int:list], Prod_Num: int, Aisles: int, Bays: int, Aisle_Dist: float, Bay_Dist: float, Slot_Capacity: int):
+def Return(**kwargs:Any) -> Tuple[int, float, float, dict]:
     """
-    inputs:
-        - Orders: A dictionary, where the keys are the order number, and the value is a list of the ordered products
-        - Prod_Num: The number of products stored in the warehouse. We can reasonably set this to the number of slots in the warehouse, and when there are fewer products than slots the remainder will essentially be dummy products which are never ordered
-        - Aisles: The number of aisles
-        - Bays: The number of bays per aisle
-        - Aisle_Dist: The distance between two consecutive aisles
-        - Bay_Dist: The distance between two consecutive bays
+    Keyword Args:
+        - num_aisles (int): the number of aisles in the instance
+        - num_bays (int): the number of bays per aisle in the instance
+        - slot_capacity (int): the capacity of each slot in the warehouse. The standard is two
+        - between_aisle_dist (float): the distance between consecutive aisles in the warehouse
+        - between_bay_dist (float): the distance between consecutive bays in the warehouse
+        - orders (dict): the orders in the specific instance
     """
 
-    import gurobipy as gp
-    from gurobipy import GRB
-    import pandas as pd
+    num_aisles = kwargs["num_aisles"]
+    num_bays = kwargs["num_bays"]
+    slot_capacity = kwargs["slot_capacity"]
+    between_aisle_dist = kwargs["between_aisle_dist"]
+    between_bay_dist = kwargs["between_bay_dist"]
+    orders = kwargs["orders"]
 
     # The parameters
-    P = range(Prod_Num) # products
-    A = range(1, Aisles+1) # aisles
-    B = range(1, Bays+1) # bays
-    O = range(len(Orders)) # orders (total number of orders - whatever the last order number is, add 1)
-    Q = Orders
+    num_prods = num_aisles * num_bays * slot_capacity
+    P = range(1, num_prods + 1) # products
+    A = range(1, num_aisles + 1) # aisles
+    B = range(1, num_bays + 1) # bays
+    O = range(1, len(orders) + 1) # orders (total number of orders - whatever the last order number is, add 1)
+    Q = orders
 
-    N = Bay_Dist
-    M = Aisle_Dist
-    C = Slot_Capacity
+    M = between_aisle_dist
+    N = between_bay_dist
+    C = slot_capacity
 
     # The model
 
