@@ -5,7 +5,9 @@ import pandas as pd
 
 def Strict_S_Shape(**kwargs) -> tuple[int, float, float, dict]:
     """
-    Inputs:
+    The Strict S-Shape model for a warehouse with alternating directional aisles and no transverse
+
+    Keyword Args:
     - num_aisles: the number of aisles in the warehouse
     - num_bays: the number of bays each aisle is split into
     - slot_capacity: the capacity of each slot (aisle, bay). The standard is two
@@ -13,10 +15,13 @@ def Strict_S_Shape(**kwargs) -> tuple[int, float, float, dict]:
     - between_bay_dist: the distance between consecutive rows
     - orders: the set of orders
 
-    Output:
-    -
-
+    Outputs:
+    - status (int): the final model status
+    - distance (float): the distance achieved by the model, taken as the objective value
+    - runtime (float): the runtime of the model
+    - assignment (dict): the assignment of products to aisles
     """
+
     num_aisles = kwargs["num_aisles"]
     num_bays = kwargs["num_bays"]
     slot_capacity = kwargs["slot_capacity"]
