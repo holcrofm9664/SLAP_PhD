@@ -41,6 +41,7 @@ def Strict_S_Shape(**kwargs) -> tuple[int, float, float, dict[int:Tuple[int,int]
         return 3, np.inf, np.inf, []
     
     gp.setParam('OutputFlag',0)
+    gp.setParam('TimeLimit',1)
 
     N = between_bay_dist
     M = between_aisle_dist
