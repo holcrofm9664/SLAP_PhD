@@ -59,3 +59,52 @@ def test_model(model:Callable, A:list, B:list, O:list, Q:list, num_trials:int, s
     df = pd.DataFrame(df_dict)
 
     return df
+
+
+def test_ABO(A, B, O, Q_values, df, trials, model):
+    for q in Q_values:
+        if q > 2*A*B:
+            break
+        orders = generate_orders(O, q, A*B*2)
+        instance = generate_single_instance(A, B, 2, 1, 1, orders)
+        runtimes = []
+        distances = []
+        for i in range(trials):
+            result = model(**instance)
+            if result[0] != 2:
+                return df
+            else:
+                runtimes.append(result[2])
+                distances.append(result[1])
+        avg_runtime = sum(runtimes)/trials
+        avg_distance = sum(distances)/trials
+        new_row = {"aisles":A, "bays":B, "num_orders":O, "order_size":q, "avg_distance":avg_distance, "avg_runtime":avg_runtime}
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index = True)
+    return df
+    
+
+def test_AB(A, B, O_values, Q_values, df, trials, model):
+    for o in O_values:
+        df_len = len(df)
+        df = test_ABO(A, B, o, Q_values, df, trials, model)
+        if len(df) == df_len:
+            break
+    return df
+
+
+def test_A(A, B_values, O_values, Q_values, df, trials, model):
+    for b in B_values:
+        df_len = len(df)
+        df = test_AB(A, b, O_values, Q_values, df, trials, model)
+        if len(df) == df_len:
+            break
+    return df
+
+
+def test_all(A_values, B_values, O_values, Q_values, df, trials, model):
+    for a in A_values:
+        df_len = len(df)
+        df = test_A(a, B_values, O_values, Q_values, df, trials, model)
+        if len(df) == df_len:
+            break
+    return df
