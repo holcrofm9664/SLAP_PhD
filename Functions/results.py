@@ -3,7 +3,7 @@ from Functions.orders_generation import generate_orders
 from Functions.instance_generation import generate_single_instance
 from typing import Callable
 
-def test_model(model:Callable, A:list, B:list, O:list, Q:list, num_trials:int, slot_capacity:int) -> pd.df:
+def test_model(model:Callable, A:list, B:list, O:list, Q:list, num_trials:int, slot_capacity:int) -> pd.DataFrame:
     """
     A function which runs one model a set number of times on all combinations of selected input parameters, 
     and generates a dataframe with the distances and runtimes achieved.
@@ -21,7 +21,7 @@ def test_model(model:Callable, A:list, B:list, O:list, Q:list, num_trials:int, s
     - df: a pandas dataframe of the results, where each row corresponds the the input parameters of each 
     instances alongside the average distance achieved and the average runtime
     """
-    
+
     avg_distances = []
     avg_runtimes = []
     aisles = []
@@ -57,4 +57,5 @@ def test_model(model:Callable, A:list, B:list, O:list, Q:list, num_trials:int, s
     df_dict["avg_runtime"] = avg_runtimes
 
     df = pd.DataFrame(df_dict)
+
     return df

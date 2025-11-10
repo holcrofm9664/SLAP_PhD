@@ -1,5 +1,5 @@
 import unittest
-from Models.Strict_S_Shape import Strict_S_Shape
+from Models.strict_s_shape import Strict_S_Shape
 import numpy as np
 
 # unit testing for the directional warehouse where backtracking across the top cross-aisle is allowed after the final pick if required

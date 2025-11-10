@@ -3,10 +3,10 @@ from gurobipy import GRB
 import pandas as pd
 from typing import Any, Tuple
 
-def Return(**kwargs:Any) -> Tuple[int, float, float, dict]:
+def Return(**kwargs:Any) -> Tuple[int, float, float, dict[int,tuple[int,int]]]:
     """
     The return policy model of Silva et al
-    
+
     Keyword Args:
         - num_aisles (int): the number of aisles in the instance
         - num_bays (int): the number of bays per aisle in the instance
@@ -120,8 +120,8 @@ def Return(**kwargs:Any) -> Tuple[int, float, float, dict]:
     for a in A:
         for b in B:
             for k in P:
-                if x[a, b, k].X > 0.5:
-                    placements.append((a, b, k))
+                if x[a,b,k].X > 0.5:
+                    placements.append((a,b,k))
 
     # Turn it into a DataFrame
     df = pd.DataFrame(placements, columns=["aisle", "bay", "product"])

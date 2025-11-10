@@ -2,8 +2,9 @@ import gurobipy as gp
 from gurobipy import GRB
 import numpy as np
 import pandas as pd
+from typing import Tuple
 
-def Strict_S_Shape(**kwargs) -> tuple[int, float, float, dict]:
+def Strict_S_Shape(**kwargs) -> tuple[int, float, float, dict[int:Tuple[int,int]]]:
     """
     The Strict S-Shape model for a warehouse with alternating directional aisles and no transverse
 

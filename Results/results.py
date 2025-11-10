@@ -1,19 +1,18 @@
 from dataclasses import dataclass
-InstanceData = list[int, int, int, float, float, dict[int,int]]
+from typing import Callable, Any, Tuple
+
 
 @dataclass
 class Model_Results:
     status: int
     distance: float
     runtime: float
-    assignment: dict[int, int]
+    assignment: dict[int, Tuple[int,int]]
     name: str
 
-    def summary(self):
-        return f"Model {self.name} achieves a distance of {self.distance} with a runtime of {self.runtime}"
-    
+
 class Compare_Model_Results:
-        def __init__(self, model1, model2):
+        def __init__(self, model1:Callable, model2:Callable):
             self.model1 = model1
             self.model2 = model2
 
@@ -85,32 +84,25 @@ class Compare_Model_Results:
 
 
 
-def compare_two_models(model1, model2, instance: InstanceData):
+def compare_two_models(model1:Callable, model:Callable, **kwargs:Any) -> None:
     """
-    Inputs:
+    Compares the key outputs of two models on a single instance
 
+    Inputs:
     - model1: the first model whose performance we wish to test
     - model2: the second model whose performance we wish to test
     - instance: the instance on which the performance of both models will be tested
     
+    Outputs:
+    - summary: prints the key outputs of the models
     """
 
     name1 = model1.__name__
     name2 = model2.__name__
 
-    status1, distance1, runtime1, assignments1 = model1(instance[0],
-                                                        instance[1],
-                                                        instance[2],
-                                                        instance[3],
-                                                        instance[4],
-                                                        instance[5])
+    status1, distance1, runtime1, assignments1 = model1(**kwargs)
     
-    status2, distance2, runtime2, assignments2 = model2(instance[0],
-                                                        instance[1],
-                                                        instance[2],
-                                                        instance[3],
-                                                        instance[4],
-                                                        instance[5])
+    status2, distance2, runtime2, assignments2 = model2(**kwargs)
 
     model1 = Model_Results(status1, distance1, runtime1, assignments1, name1)
     model2 = Model_Results(status2, distance2, runtime2, assignments2, name2)

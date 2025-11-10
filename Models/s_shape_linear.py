@@ -1,33 +1,57 @@
 import gurobipy as gp
 from gurobipy import GRB
-import math
+import pandas as pd
+from typing import Any, Tuple
 
-def S_Shape_Linear(Orders: dict[int:list], Prod_Num: int, Aisles: int, Bays: int, Aisle_Dist: float, Bay_Dist: float, Slot_Capacity: int, heuristic_solution_value: float = 1000000):
-
-    import math
-    import pandas as pd
+def S_Shape_Linear(**kwargs:Any) -> Tuple[int,float,float,dict[int,Tuple[int,int]]]:
+    """
+    The Novel S-Shape model
     
+    Keyword Args:
+        - num_aisles (int): the number of aisles in the instance
+        - num_bays (int): the number of bays per aisle in the instance
+        - slot_capacity (int): the capacity of each slot in the warehouse. The standard is two
+        - between_aisle_dist (float): the distance between consecutive aisles in the warehouse
+        - between_bay_dist (float): the distance between consecutive bays in the warehouse
+        - orders (dict): the orders in the specific instance
+    
+    Outputs:
+        - status (int): the Gurobi status
+        - distance (float): the final distance found by the model, the model's objective value
+        - runtime (float): the model's runtime
+        - assignment (dict): the final assignment of products to slots
+    
+    """
+    num_aisles = kwargs["num_aisles"]
+    num_bays = kwargs["num_bays"]
+    slot_capacity = kwargs["slot_capacity"]
+    between_aisle_dist = kwargs["between_aisle_dist"]
+    between_bay_dist = kwargs["between_bay_dist"]
+    orders = kwargs["orders"]
+
+
     model = gp.Model("S-shape")
 
     model.setParam('TimeLimit', 3600) # 1 hour time limit
 
-    M = Aisle_Dist
-    N = Bay_Dist
+    M = between_aisle_dist
+    N = between_bay_dist
+    prod_num = num_aisles*num_bays*slot_capacity
 
-    A = range(1, Aisles + 1)
-    B = range(1, Bays + 1)
-    P = range(Prod_Num)
-    C = Slot_Capacity
-    Q = Orders
+    A = range(1, num_aisles + 1)
+    B = range(1, num_bays + 1)
+    P = range(prod_num)
+    C = slot_capacity
+    Q = orders
     O = range(len(Q))
 
     x = model.addVars(A, B, P, vtype=GRB.BINARY, name = "x") # indicators if product k is in slot (a,b)
     z = model.addVars(O, A, vtype = GRB.BINARY, name = "z") # indicators if aisle a contains an ordered product from order O
-    v = model.addVars(O, lb = 1, ub=Aisles, vtype=GRB.CONTINUOUS, name = "v") # the last aisle reached for order o
+    v = model.addVars(O, lb = 1, ub=num_aisles, vtype=GRB.CONTINUOUS, name = "v") # the last aisle reached for order o
     is_odd = model.addVars(O, vtype = GRB.BINARY, name = "is_odd") # a variable for if there are an odd number of aisles
-    w = model.addVars(O, lb = 1, ub = Bays, vtype=GRB.CONTINUOUS, name="last_bay") # the last row of the last aisle
+    w = model.addVars(O, lb = 1, ub = num_bays, vtype=GRB.CONTINUOUS, name="last_bay") # the last row of the last aisle
     t = model.addVars(O, vtype=GRB.INTEGER, name = "t") # an auxiliary variable for seeing if there are an odd or even number of aisles used
-    d = model.addVars(O, lb = 0, ub = Bays, vtype = GRB.CONTINUOUS, name="d") # an auxiliary variable to linearise the objective
+    d = model.addVars(O, lb = 0, ub = num_bays, vtype = GRB.CONTINUOUS, name="d") # an auxiliary variable to linearise the objective
     delta = model.addVars(O, A, vtype=GRB.BINARY, name="delta") # an auxiliary variable to deal with the w_o problem
     s = model.addVars(O, A, B, vtype = GRB.BINARY, name = "s") # if order o has a pick in slot (a,b)
 

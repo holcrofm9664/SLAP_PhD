@@ -1,6 +1,6 @@
 from Functions.orders_generation import generate_orders
 
-def generate_instances(A:list, B:list, O:list, Q:list, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float):
+def generate_instances(A:list, B:list, O:list, Q:list, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float) -> list:
     """
     Generates all possible combinations of inputs given the user inputs which parameter values they would like to test
 

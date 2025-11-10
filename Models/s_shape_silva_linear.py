@@ -3,7 +3,7 @@ from gurobipy import GRB
 from typing import Any, Tuple
 
 
-def S_Shape_Silva_Linear(**kwargs:Any) -> Tuple[int, float, float, dict]:
+def S_Shape_Silva_Linear(**kwargs:Any) -> Tuple[int, float, float, dict[int:Tuple[int,int]]]:
     """
     The S-Shape model of Silva et al
 
@@ -21,7 +21,7 @@ def S_Shape_Silva_Linear(**kwargs:Any) -> Tuple[int, float, float, dict]:
     - runtime (float): the runtime of the model
     - assignments (dict): the final assignments of products to slots
     """
-    
+
     num_aisles = kwargs["num_aisles"]
     num_bays = kwargs["num_bays"]
     slot_capacity = kwargs["slot_capacity"]
