@@ -3,17 +3,17 @@ from gurobipy import GRB
 import pandas as pd
 from typing import Any, Tuple
 
-def S_Shape_Linear(**kwargs:Any) -> Tuple[int,float,float,dict[int,Tuple[int,int]]]:
+def S_Shape_Linear(num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, orders:dict[int,list[int]], **unused:Any) -> Tuple[int,float,float,dict[int,Tuple[int,int]]]:
     """
     The Novel S-Shape model
     
-    Keyword Args:
-        - num_aisles (int): the number of aisles in the instance
-        - num_bays (int): the number of bays per aisle in the instance
-        - slot_capacity (int): the capacity of each slot in the warehouse. The standard is two
-        - between_aisle_dist (float): the distance between consecutive aisles in the warehouse
-        - between_bay_dist (float): the distance between consecutive bays in the warehouse
-        - orders (dict): the orders in the specific instance
+    Inputs:
+        - num_aisles: the number of aisles in the instance
+        - num_bays: the number of bays per aisle in the instance
+        - slot_capacity: the capacity of each slot in the warehouse. The standard is two
+        - between_aisle_dist: the distance between consecutive aisles in the warehouse
+        - between_bay_dist: the distance between consecutive bays in the warehouse
+        - orders: the orders in the specific instance
     
     Outputs:
         - status (int): the Gurobi status
@@ -22,14 +22,7 @@ def S_Shape_Linear(**kwargs:Any) -> Tuple[int,float,float,dict[int,Tuple[int,int
         - assignment (dict): the final assignment of products to slots
     
     """
-    num_aisles = kwargs["num_aisles"]
-    num_bays = kwargs["num_bays"]
-    slot_capacity = kwargs["slot_capacity"]
-    between_aisle_dist = kwargs["between_aisle_dist"]
-    between_bay_dist = kwargs["between_bay_dist"]
-    orders = kwargs["orders"]
-
-
+    
     model = gp.Model("S-shape")
 
     model.setParam('TimeLimit', 3600) # 1 hour time limit

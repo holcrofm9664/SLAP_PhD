@@ -2,13 +2,13 @@ import gurobipy as gp
 from gurobipy import GRB
 import numpy as np
 import pandas as pd
-from typing import Tuple
+from typing import Tuple, Any
 
-def Strict_S_Shape(**kwargs) -> tuple[int, float, float, dict[int:Tuple[int,int]]]:
+def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, orders:dict[int,list[int]], **unused:Any) -> tuple[int, float, float, dict[int:Tuple[int,int]]]:
     """
     The Strict S-Shape model for a warehouse with alternating directional aisles and no transverse
 
-    Keyword Args:
+    Inputs:
     - num_aisles: the number of aisles in the warehouse
     - num_bays: the number of bays each aisle is split into
     - slot_capacity: the capacity of each slot (aisle, bay). The standard is two
@@ -23,13 +23,6 @@ def Strict_S_Shape(**kwargs) -> tuple[int, float, float, dict[int:Tuple[int,int]
     - assignment (dict): the assignment of products to aisles
     """
 
-    num_aisles = kwargs["num_aisles"]
-    num_bays = kwargs["num_bays"]
-    slot_capacity = kwargs["slot_capacity"]
-    between_aisle_dist = kwargs["between_aisle_dist"]
-    between_bay_dist = kwargs["between_bay_dist"]
-    orders = kwargs["orders"]
-
     all_prods = []
     for i in orders:
         for j in orders[i]:
@@ -41,7 +34,7 @@ def Strict_S_Shape(**kwargs) -> tuple[int, float, float, dict[int:Tuple[int,int]
         return 3, np.inf, np.inf, []
     
     gp.setParam('OutputFlag',0)
-    gp.setParam('TimeLimit',1)
+    gp.setParam('TimeLimit',3600)
 
     N = between_bay_dist
     M = between_aisle_dist

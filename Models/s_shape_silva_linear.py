@@ -3,17 +3,17 @@ from gurobipy import GRB
 from typing import Any, Tuple
 
 
-def S_Shape_Silva_Linear(**kwargs:Any) -> Tuple[int, float, float, dict[int:Tuple[int,int]]]:
+def S_Shape_Silva_Linear(num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, orders:dict[int,list[int]], **unused:Any) -> Tuple[int, float, float, dict[int:Tuple[int,int]]]:
     """
     The S-Shape model of Silva et al
 
-    Keyword Args:
-    - num_aisles (int): the number of aisles in the specific instance
-    - num_bays (int): the number of bays in the specific instance
-    - slot_capacity (int): the capacity of a single slot. The standard is two
-    - between_aisle_dist (float): the distance between two consecutive aisles
-    - between_bay_dis (float): the distance between two consecutive bays
-    - orders (dict): the orders for the specific instance
+    Inputs:
+    - num_aisles: the number of aisles in the specific instance
+    - num_bays: the number of bays in the specific instance
+    - slot_capacity: the capacity of a single slot. The standard is two
+    - between_aisle_dist: the distance between two consecutive aisles
+    - between_bay_dist: the distance between two consecutive bays
+    - orders: the orders for the specific instance
     
     Outputs:
     - status (int): the status of the gurobi model
@@ -21,13 +21,6 @@ def S_Shape_Silva_Linear(**kwargs:Any) -> Tuple[int, float, float, dict[int:Tupl
     - runtime (float): the runtime of the model
     - assignments (dict): the final assignments of products to slots
     """
-
-    num_aisles = kwargs["num_aisles"]
-    num_bays = kwargs["num_bays"]
-    slot_capacity = kwargs["slot_capacity"]
-    between_aisle_dist = kwargs["between_aisle_dist"]
-    between_bay_dist = kwargs["between_bay_dist"]
-    orders = kwargs["orders"]
 
     import pandas as pd
 
