@@ -1,23 +1,49 @@
 import pandas as pd
 import numpy as np
+from typing import Any, Tuple
 from Functions.orders_generation import generate_orders
 from Models.strict_s_shape import Strict_S_Shape
 
-def check_if_larger(instance1, instance2):
+def check_if_larger(instance1:list[int], instance2:list[int]) -> bool:
+    """
+    Checks whether an instance is at least as large as another instance, whereby to be larger than another instance 
+    means that every parameter is at least as large as the corresponding parameter in the other instance.
+    
+    Inputs:
+    - instance1: the first instance, represented by its number of aisles, number of bays, number of orders and size of orders
+    - instance2: the second instance, represented by its number of aisles, number of bays, number of orders and size of orders
+
+    Outputs:
+    - a boolean value indicating whether or not the first instance is larger than the second instance
+    """
+    
     for i in range(len(instance1)):
         if instance1[i] < instance2[i]:
             return False
         
     return True
 
-def size_check(instance, stored_instances):
+def size_check(instance:list[int], stored_instances:dict[int,list[int]]) -> int:
+    """
+    Checks if an instance is larger than any of the stored instances, for use in determining whether gurobi should attempt to solve it
+
+    Inputs:
+    - instance: the instance we are testing, given as a list of its parameters
+    - stored_instances: the instances which we have been unable to solve so far, stored as lists of their parameters
+
+    Outputs:
+    - a binary, indicating whether the instance should be solved
+    
+    
+    
+    """
     for inst in stored_instances:
         val = check_if_larger(instance, stored_instances[inst])
-        if val == False:
-            return 0 # do not solve
+        if val == True:
+            return 0 # do not solve, as it is larger than at least one instance
     return 1
 
-def solve_all(A_vals, B_vals, O_vals, Q_vals, slot_capacity, between_aisle_dist, between_bay_dist, num_trials, **unused):
+def solve_all(A_vals:list[int], B_vals:list[int], O_vals:list[int], Q_vals:list[int], slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, num_trials:int, **unused:Any):
     
     # generate the instances
     instances = {}
@@ -41,8 +67,6 @@ def solve_all(A_vals, B_vals, O_vals, Q_vals, slot_capacity, between_aisle_dist,
     for inst in instances:
         val = size_check(instances[inst], stored_instances)
         if val == 1:
-            distances = []
-            runtimes = []
             for i in range(num_trials):
                 orders = generate_orders(instances[inst][2], instances[inst][3], instances[inst][0]*instances[inst][1]*slot_capacity, seed = seed)
                 status, distance, runtime, assignments = Strict_S_Shape(instances[inst][0], instances[inst][1], slot_capacity, between_aisle_dist, between_bay_dist, orders)
@@ -52,20 +76,17 @@ def solve_all(A_vals, B_vals, O_vals, Q_vals, slot_capacity, between_aisle_dist,
                     count += 1
                     break
                 else:
-                    distances.append(distance)
-                    runtimes.append(runtime)
                     orders_dict.update({orders_count:orders})
                     orders_count += 1
-            new_row = {"aisles":instances[inst][0], "bays":instances[inst][1], "num_orders":instances[inst][2], "order_size":instances[inst][3], "avg_distance":np.mean(distances), "avg_runtime":np.mean(runtimes)}
-            df = pd.concat([df, pd.DataFrame([new_row])],ignore_index=True)
-            orders_count += 1
+                    new_row = {"aisles":instances[inst][0], "bays":instances[inst][1], "num_orders":instances[inst][2], "order_size":instances[inst][3], "distance":distance, "runtime":runtime}
+                    df = pd.concat([df, pd.DataFrame([new_row])],ignore_index=True)
 
     return df, orders_dict
     
 
-A_vals = [1,3,5]
+A_vals = [1,3,5,10]
 B_vals = [5,10]
-O_vals = [1,3,5]
+O_vals = [1,3,5,10]
 Q_vals = [5,10]
 slot_capacity = 2
 between_aisle_dist = 1
@@ -84,4 +105,5 @@ instance = {"A_vals":A_vals,
 
 df, orders_dict = solve_all(**instance)
 
-print(df)
+#print(df)
+print(orders_dict)
