@@ -32,10 +32,16 @@ def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisl
     num_prods = len(set_prods)
 
     if num_prods > num_aisles * num_bays * slot_capacity:
+        print(f"num_prods = {num_prods}")
+        print(f"num_aisles = {num_aisles}")
+        print(f"num_bays = {num_bays}")
+        print(f"capacity = {slot_capacity}")
+        print(f"num_slots = {num_aisles*num_bays*slot_capacity}")
+        print("infeasiblity caused by too many products for the number of slots")
         return 3, np.inf, np.inf, []
     
     gp.setParam('OutputFlag',0)
-    gp.setParam('TimeLimit',3600)
+    gp.setParam('TimeLimit',3)
 
     N = between_bay_dist
     M = between_aisle_dist
@@ -258,10 +264,3 @@ def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisl
 
 
     return model.Status, model.ObjVal, model.Runtime, assignment
-
-instance = {"num_orders":1, "order_size":3, "num_products":5, "num_aisles":1, "num_bays":5, "slot_capacity":2, "between_aisle_dist":1, "between_bay_dist":1}
-orders = generate_orders(**instance)
-
-status, distance, runtime, assignment = Strict_S_Shape(orders=orders, **instance)
-
-print(status, distance, runtime, assignment)
