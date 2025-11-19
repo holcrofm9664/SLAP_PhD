@@ -32,4 +32,4 @@ axes[1,1].scatter(Q, R)
 axes[1,1].set_title("Runtimes vs Order Size")
 axes[1,1].set_xlabel("order_size")
 
-plt.show()
+plt.savefig("plots/scatter_params_runtime.png")
