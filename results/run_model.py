@@ -1,4 +1,4 @@
-from Functions.results import solve_all
+from functions.results import solve_all
 import pickle
 
 
