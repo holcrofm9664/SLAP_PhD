@@ -3,7 +3,6 @@ from gurobipy import GRB
 import numpy as np
 import pandas as pd
 from typing import Tuple, Any
-from functions.orders_generation import generate_orders
 
 def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, orders:dict[int,list[int]], **unused:Any) -> tuple[int, float, float, dict[int:Tuple[int,int]]]:
     """

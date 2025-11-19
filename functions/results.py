@@ -1,7 +1,5 @@
 import pandas as pd
-import numpy as np
-from typing import Any, Tuple
-from dataclasses import dataclass
+from typing import Any
 from functions.orders_generation import generate_orders
 from models.strict_s_shape import Strict_S_Shape
 

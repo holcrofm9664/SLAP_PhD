@@ -3,7 +3,6 @@ from typing import Tuple
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
-from matplotlib import cm
 from matplotlib.colors import Normalize, LinearSegmentedColormap
 
 
