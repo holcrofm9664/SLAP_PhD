@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from typing import Any, Tuple
+from dataclasses import dataclass
 from Functions.orders_generation import generate_orders
 from Models.strict_s_shape import Strict_S_Shape
 
@@ -33,10 +34,8 @@ def size_check(instance:list[int], stored_instances:dict[int,list[int]]) -> int:
 
     Outputs:
     - a binary, indicating whether the instance should be solved
-    
-    
-    
     """
+
     for inst in stored_instances:
         val = check_if_larger(instance, stored_instances[inst])
         if val == True:
@@ -82,28 +81,3 @@ def solve_all(A_vals:list[int], B_vals:list[int], O_vals:list[int], Q_vals:list[
                     df = pd.concat([df, pd.DataFrame([new_row])],ignore_index=True)
 
     return df, orders_dict
-    
-
-A_vals = [1,3,5,10]
-B_vals = [5,10]
-O_vals = [1,3,5,10]
-Q_vals = [5,10]
-slot_capacity = 2
-between_aisle_dist = 1
-between_bay_dist = 1
-num_trials = 2
-
-instance = {"A_vals":A_vals,
-            "B_vals":B_vals,
-            "O_vals":O_vals,
-            "Q_vals":Q_vals,
-            "slot_capacity":slot_capacity,
-            "between_aisle_dist":between_aisle_dist,
-            "between_bay_dist":between_bay_dist,
-            "num_trials":num_trials}
-
-
-df, orders_dict = solve_all(**instance)
-
-#print(df)
-print(orders_dict)
