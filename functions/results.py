@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Any
+from typing import Any, Iterable, Tuple
 from functions.orders_generation import generate_orders
 from models.strict_s_shape import Strict_S_Shape
 
@@ -22,60 +22,46 @@ def check_if_larger(instance1:list[int], instance2:list[int]) -> bool:
         
     return True
 
-def size_check(instance:list[int], stored_instances:dict[int,list[int]]) -> int:
-    """
-    Checks if an instance is larger than any of the stored instances, for use in determining whether gurobi should attempt to solve it
 
+
+def solve_all(instances:Iterable[list[int]], slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, num_trials:int, **unused:Any) -> Tuple[pd.DataFrame, dict[int,dict[int]]]:
+    """
+    Runs a model on a set of instances for multiple trials, avoiding testing instances with a high likelihood of timeout
+    
     Inputs:
-    - instance: the instance we are testing, given as a list of its parameters
-    - stored_instances: the instances which we have been unable to solve so far, stored as lists of their parameters
+    - instances: the combinations of input parameters we wish to test
+    - slot_capacity: the capacity of a slot in the warehouse. The standard is 2
+    - between_aisle_dist: the distance between consecutive aisles in the warehouse
+    - between_bay_dist: the distance between consecutive bays in the warehouse
+    - num_trials: the number of times we wish to test each instance
 
     Outputs:
-    - a binary, indicating whether the instance should be solved
-    """
+    - a dataframe including input parameters, final distance and runtimes
+    - a pickle file of the orders used in each trial
+    """                   
 
-    for inst in stored_instances:
-        val = check_if_larger(instance, stored_instances[inst])
-        if val == True:
-            return 0 # do not solve, as it is larger than at least one instance
-    return 1
-
-def solve_all(A_vals:list[int], B_vals:list[int], O_vals:list[int], Q_vals:list[int], slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, num_trials:int, **unused:Any):
-    
-    # generate the instances
-    instances = {}
-    count = 1
-    for a in A_vals:
-        for b in B_vals:
-            for o in O_vals:
-                for q in Q_vals:
-                    instances.update({count:[a,b,o,q]})
-                    count += 1
-                    
-    
-    df = pd.DataFrame()
-    stored_instances = {}
+    data = []
+    stored_instances = []
     orders_dict = {}
-    count = 1
-    orders_count = 0
+    count = 0
     seed = 1
 
 
     for inst in instances:
-        val = size_check(instances[inst], stored_instances)
-        if val == 1:
+        if any(check_if_larger(list(inst), instance) for instance in stored_instances) or len(stored_instances) == 0:
             for i in range(num_trials):
-                orders = generate_orders(instances[inst][2], instances[inst][3], instances[inst][0]*instances[inst][1]*slot_capacity, seed = seed)
-                status, distance, runtime, assignments = Strict_S_Shape(instances[inst][0], instances[inst][1], slot_capacity, between_aisle_dist, between_bay_dist, orders)
+                instance = list(inst)
+                orders = generate_orders(instance[2], instance[3], instance[0]*instance[1]*slot_capacity, seed = seed)
+                status, distance, runtime, _ = Strict_S_Shape(instance[0], instance[1], slot_capacity, between_aisle_dist, between_bay_dist, orders)
                 seed += 1
                 if status != 2:
-                    stored_instances.update({count:instances[inst]})
+                    stored_instances.append(instance)
                     count += 1
                     break
                 else:
-                    orders_dict.update({orders_count:orders})
-                    orders_count += 1
-                    new_row = {"aisles":instances[inst][0], "bays":instances[inst][1], "num_orders":instances[inst][2], "order_size":instances[inst][3], "distance":distance, "runtime":runtime}
-                    df = pd.concat([df, pd.DataFrame([new_row])],ignore_index=True)
+                    orders_dict.update({count:orders})
+                    data.append({"aisles":instance[0], "bays":instance[1], "num_orders":instance[2], "order_size":instance[3], "distance":distance, "runtime":runtime})
+    
+    df = pd.DataFrame(data)
 
     return df, orders_dict

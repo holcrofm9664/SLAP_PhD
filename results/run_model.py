@@ -1,4 +1,5 @@
 from functions.results import solve_all
+from itertools import product
 import pickle
 
 
@@ -11,10 +12,9 @@ between_aisle_dist = 1
 between_bay_dist = 1
 num_trials = 2
 
-instance = {"A_vals":A_vals,
-            "B_vals":B_vals,
-            "O_vals":O_vals,
-            "Q_vals":Q_vals,
+instances = product(A_vals, B_vals, Q_vals, O_vals)
+
+instance = {"instances":instances,
             "slot_capacity":slot_capacity,
             "between_aisle_dist":between_aisle_dist,
             "between_bay_dist":between_bay_dist,
