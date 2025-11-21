@@ -1,7 +1,7 @@
 import pandas as pd
 from typing import Any, Iterable, Tuple
 from functions.orders_generation import generate_orders
-from models.strict_s_shape import Strict_S_Shape
+from models.full_models.strict_s_shape import Strict_S_Shape
 
 def check_if_larger(instance1:list[int], instance2:list[int]) -> bool:
     """
