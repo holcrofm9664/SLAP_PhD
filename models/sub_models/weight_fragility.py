@@ -1,30 +1,40 @@
+import numpy as np
 import gurobipy as gp
 from gurobipy import GRB
 from typing import Tuple
 from collections import Counter
 
-def weight_fragility(orders:dict[int,list[int]], prod_features:dict[str,list[int]], num_bays:int, slot_capacity:int) -> Tuple[int, float, list[tuple[int,int]]]:
+def weight_fragility(orders:dict[int,list[int]], crushing_array:np.ndarray[int], cluster_assignments:list[int], num_bays:int, slot_capacity:int) -> Tuple[int, float, list[tuple[int,int]]]:
+    """
+    The second stage model which assigns products to bays within one aisle (to which they were assigned in the first stage). 
     
+    Inputs
+    - orders: the set of orders used to assign products. These are needed as a product can only be crushed by another product if they are in the same order
+    - crushing_array: an array of size num_products x num_products, showing if the second product can crush the first (1) or not (0)
+    - cluster_assignments: a list giving which cluster each product belongs to. This could be the aisle the product belongs to in the destination shop, or something more general
+    - num_bays: the number of bays the aisle is split into
+    - slot_capacity: the capacity of one bay, the standard being 2
+
+    Outputs:
+    - status: whether a feasible solution was found
+    - objective value: the number of crushing events which would have occurred had the assignment been used on the set of orders
+    - assignments: the assignments of products to bays
+    
+    """
     # initialising the model
     model = gp.Model("weight_fragility")
 
-    weight_vals = prod_features["prod_heavy"]
-    aisle_vals = prod_features["prod_aisle"]
+    max_cluster_size = Counter(cluster_assignments).most_common(1)[0][1] # calculate the largest "cluster"
 
-    max_cluster_size = Counter(aisle_vals).most_common(1)[0][1]
+    c = {}
 
-    h = {}
-    a = {}
-
-    for i in range(1, len(weight_vals)+1):
-        h[i] = weight_vals[i-1]
-        a[i] = aisle_vals[i-1]
-    print(h)
-    print(a)
-    fragile_list = prod_features["prod_fragile"]
-    fragile_prods = [i+1 for i, f in enumerate(fragile_list) if f == 1]
+    for i in range(1, len(cluster_assignments) + 1):
+        c[i] = cluster_assignments[i-1]
 
     num_products = num_bays * slot_capacity
+
+    while len(c) < num_products:
+        c.update({len(c)+1:0})
 
     # sets
     B = range(1, num_bays + 1)
@@ -34,31 +44,27 @@ def weight_fragility(orders:dict[int,list[int]], prod_features:dict[str,list[int
 
     # variables
     x = model.addVars(I, B, vtype = GRB.BINARY, name = "x") # assignment of products to slots
-    p = model.addVars(I, O, vtype = GRB.BINARY, name = "p") # whether an item is crushed and a penalty applied
-    z = model.addVars(I, I, vtype = GRB.INTEGER, name = "z") # auxiliary variable to define an absolute difference
+    p = model.addVars(I, B, O, vtype = GRB.BINARY, name = "p") # whether an item is crushed and a penalty applied
 
+    # assignment constraint
     for i in I:
         model.addConstr(
             gp.quicksum(x[i,b] for b in B) == 1,
             name = f"assign_product_{i}_to_a_bay"
         )
 
+        # constraints for ensuring that similar products are placed close to each other
         for j in I:
             if j > i:
-                if a[i] == a[j]:
+                if c[i] == c[j]:
                     model.addConstr(
-                        z[i,j] >= gp.quicksum(b*x[i,b] for b in B) - gp.quicksum(b*x[j,b] for b in B),
+                        gp.quicksum(b*x[i,b] for b in B) - gp.quicksum(b*x[j,b] for b in B) <= max_cluster_size/2,
                         name = f"lower_bound_on_z_for_products_{i}_and_{j}"
                     )
 
                     model.addConstr(
-                        z[i,j] <= -gp.quicksum(b*x[i,b] for b in B) + gp.quicksum(b*x[j,b] for b in B),
+                        -gp.quicksum(b*x[i,b] for b in B) + gp.quicksum(b*x[j,b] for b in B) <= max_cluster_size/2,
                         name = f"upper_bound_on_z_for_products_{i}_and_{j}"
-                    )
-
-                    model.addConstr(
-                        z[i,j] <= max_cluster_size/2,
-                        name = f"enforce_a_maximal_distance_between_items_in_one_cluster_items_{i}_{j}"
                     )
 
     for b in B:
@@ -67,43 +73,50 @@ def weight_fragility(orders:dict[int,list[int]], prod_features:dict[str,list[int
             name = f"capacity_of_bay_{b}"
         )
 
+    # constraints relating to crushing
     for o in O:
-        for i in fragile_prods:
+        for i in Q[o]:
             for b in B:
                 model.addConstr(
-                    p[i,o] <= x[i,b],
-                    name = f"penalty_only_applied_if_product_{i}_assigned_to_bay_{b}_for_order_{o}"
+                    p[i,b,o] <= x[i,b],
+                    name = f"prod_{i}_only_crushed_if_it_is_in_slot_{b}"
                 )
 
-                further_bays = range(b+1, len(B))
+                further_aisles = range(b+1,len(B))
                 model.addConstr(
-                    p[i,o] <= gp.quicksum(x[k,b]*h[k] for k in further_bays if k in Q[o])/len(B),
-                    name = f"penalty_only_applied_for_product_{i}_if_further_bay_contains_a_heavy_product_for_order_{o}"
+                    p[i,b,o] <= gp.quicksum(x[j,k]*crushing_array[i-1,j-1] for k in further_aisles for j in Q[o] if j != i),
+                    name = f"prod_{i}_only_crushed_if_a_further_bay_contains_a_product_able_to_crush_it_for_order_{o}"
                 )
 
                 model.addConstr(
-                    p[i,o] >= gp.quicksum(x[k,b]*h[k] for k in further_bays)/len(B) + x[i,b] - 1,
-                    name = f"if_fragile_product_{i}_stored_in_bay_b_and_heavy_product_stored_in_further_bay_for_order_{o}_apply_penalty"
+                    p[i,b,o] >= x[i,b] + gp.quicksum(x[j,k]*crushing_array[i-1,j-1] for k in further_aisles for j in Q[o] if j != i)/len(B) - 1,
+                    name = f"prod_{i}_crushed_if_in_bay_{b}_and_a_future_bay_contains_a_product_able_to_crush_it_in_order_{o}"
                 )
-    
+                
+                
 
     # objective
     model.setObjective(
-        gp.quicksum(
-            gp.quicksum(p[i,o] for i in I)
-            for o in O
-        ),
+        gp.quicksum(p[i,b,o] for i in I for b in B for o in O),
         GRB.MINIMIZE
     )
 
     model.optimize()
-    
+
+    if model.Status != 2:
+        model.computeIIS()
+        model.write("infeasible.ilp")
+
+    for o in O:
+        for i in I:
+            for b in B:
+                print(p[i,b,o].X)
+
     placements = []
     for i in I:
         for b in B:
-            print(x[i,b])
             if x[i,b].X > 0.5:
                 placements.append((int(i),int(b)))
 
+
     return model.Status, model.ObjVal, placements
-                
