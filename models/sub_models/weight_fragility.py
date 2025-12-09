@@ -4,7 +4,7 @@ from gurobipy import GRB
 from typing import Tuple
 from collections import Counter
 
-def weight_fragility(orders:dict[int,list[int]], crushing_array:np.ndarray[int], cluster_assignments:list[int], num_bays:int, slot_capacity:int) -> Tuple[int, float, list[tuple[int,int]]]:
+def weight_fragility(orders:dict[int,list[int]], crushing_array:np.ndarray[int], cluster_assignments:list[int], num_bays:int, slot_capacity:int, cluster_max_distance:int) -> Tuple[int, float, list[tuple[int,int]]]:
     """
     The second stage model which assigns products to bays within one aisle (to which they were assigned in the first stage). 
     
@@ -14,6 +14,7 @@ def weight_fragility(orders:dict[int,list[int]], crushing_array:np.ndarray[int],
     - cluster_assignments: a list giving which cluster each product belongs to. This could be the aisle the product belongs to in the destination shop, or something more general
     - num_bays: the number of bays the aisle is split into
     - slot_capacity: the capacity of one bay, the standard being 2
+    - cluster_max_distance: the maximum number of bays apart two items belonging to the same cluster should be placed. 
 
     Outputs:
     - status: whether a feasible solution was found
@@ -23,8 +24,6 @@ def weight_fragility(orders:dict[int,list[int]], crushing_array:np.ndarray[int],
     """
     # initialising the model
     model = gp.Model("weight_fragility")
-
-    max_cluster_size = Counter(cluster_assignments).most_common(1)[0][1] # calculate the largest "cluster"
 
     c = {}
 
@@ -58,12 +57,12 @@ def weight_fragility(orders:dict[int,list[int]], crushing_array:np.ndarray[int],
             if j > i:
                 if c[i] == c[j]:
                     model.addConstr(
-                        gp.quicksum(b*x[i,b] for b in B) - gp.quicksum(b*x[j,b] for b in B) <= max_cluster_size/2,
+                        gp.quicksum(b*x[i,b] for b in B) - gp.quicksum(b*x[j,b] for b in B) <= cluster_max_distance,
                         name = f"lower_bound_on_z_for_products_{i}_and_{j}"
                     )
 
                     model.addConstr(
-                        -gp.quicksum(b*x[i,b] for b in B) + gp.quicksum(b*x[j,b] for b in B) <= max_cluster_size/2,
+                        -gp.quicksum(b*x[i,b] for b in B) + gp.quicksum(b*x[j,b] for b in B) <= cluster_max_distance,
                         name = f"upper_bound_on_z_for_products_{i}_and_{j}"
                     )
 
