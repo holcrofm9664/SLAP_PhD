@@ -76,17 +76,7 @@ def weight_fragility(orders:dict[int,list[int]], crushing_array:np.ndarray[int],
     for o in O:
         for i in Q[o]:
             for b in B:
-                model.addConstr(
-                    p[i,b,o] <= x[i,b],
-                    name = f"prod_{i}_only_crushed_if_it_is_in_slot_{b}"
-                )
-
                 further_aisles = range(b+1,len(B))
-                model.addConstr(
-                    p[i,b,o] <= gp.quicksum(x[j,k]*crushing_array[i-1,j-1] for k in further_aisles for j in Q[o] if j != i),
-                    name = f"prod_{i}_only_crushed_if_a_further_bay_contains_a_product_able_to_crush_it_for_order_{o}"
-                )
-
                 model.addConstr(
                     p[i,b,o] >= x[i,b] + gp.quicksum(x[j,k]*crushing_array[i-1,j-1] for k in further_aisles for j in Q[o] if j != i)/len(B) - 1,
                     name = f"prod_{i}_crushed_if_in_bay_{b}_and_a_future_bay_contains_a_product_able_to_crush_it_in_order_{o}"
