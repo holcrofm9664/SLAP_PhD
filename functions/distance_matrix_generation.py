@@ -66,9 +66,24 @@ def build_distance_matrix(pairwise_distance_function:Callable, num_aisles:int, n
 
 # creating the distance matrix for the transverse warehouse
 
-def build_distance_matrix_transverse(num_aisles, num_bays, M, N, penalty):
+def build_distance_matrix_transverse(num_aisles:int, num_bays:int, between_aisle_distance:float, between_bay_distance:float, penalty:float) -> np.ndarray:
+    """
+    Calculates the pairwise distances between slots in a warehouse with directional aisles and a single transverse 
+
+    Inputs:
+    - num_aisles: the number of aisles in the warehouse
+    - num_bays: the number of bays in the warehouse
+    - between_aisle_distance: the distance between consecutive aisles in the warehouse
+    - between_bay_distance: the distance between consecutive bays in the warehouse
+    - penalty: the penalty associated with going the wrong way down directional aisles. This is not set to inf to allow use in Gurobi models
+
+    Outputs:
+    - distance_matrix: the matrix of pairwise distances between all slots in the warehouse
+    """
 
     num_slots = num_bays * num_aisles
+    M = between_aisle_distance
+    N = between_bay_distance
     D = np.zeros((num_slots, num_slots))
 
     # generating the matrix of pairwise distances between slots
@@ -197,30 +212,45 @@ def build_distance_matrix_transverse(num_aisles, num_bays, M, N, penalty):
     return D_full
 
 
-def build_pairwise_product_distance_matrix(slot_assignments, num_aisles, num_bays, capacity, between_aisle_dist, between_bay_dist, penalty):
+def build_pairwise_product_distance_matrix(slot_assignments:dict[int,int], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, penalty:int) -> np.ndarray:
+    """
+    Takes the matrix for the pairwise distances between slots in the warehouse and the product assignments to create a new distance matrix for the pairwise distances between products
 
-    old_matrix = build_distance_matrix_transverse(num_aisles, num_bays, between_aisle_dist, between_bay_dist, penalty)
+    Inputs:
+    - slot_assignments: the assignments of products to slots
+    - num_aisles: the number of aisles in the warehouse
+    - num_bays: the number of bays in the warehouse
+    - slot_capacity: the capacity of a single slot in the warehouse. The standard is two
+    - between_aisle_dist: the distance between consecutive aisles in the warehouse
+    - between_bay_dist: the distance between two consecutive bays in the warehouse
+    - penalty: the penalty enforcing aisle directionality
+
+    Outputs:
+    - diatance_matrix: the matrix of pairwise distances between products in the warehouse
+    """
+
+    between_slot_distance_matrix = build_distance_matrix_transverse(num_aisles, num_bays, between_aisle_dist, between_bay_dist, penalty)
     num_slots = num_aisles * num_bays
-    num_products = num_slots * capacity
-    new_matrix = np.zeros((num_products+1, num_products+1))
+    num_products = num_slots * slot_capacity
+    between_prod_distance_matrix = np.zeros((num_products+1, num_products+1))
     
     for prod_1 in range(1, num_products+1):
         for prod_2 in range(1, num_products+1):
             slot_1 = slot_assignments[prod_1]
             slot_2 = slot_assignments[prod_2]
-            distance = old_matrix[slot_1, slot_2]
-            new_matrix[prod_1,prod_2] = distance
+            distance = between_slot_distance_matrix[slot_1, slot_2]
+            between_prod_distance_matrix[prod_1,prod_2] = distance
 
     # from door to product
     for prod in range(1, num_products+1):
         slot = slot_assignments[prod]
-        distance = old_matrix[0,slot]
-        new_matrix[0,prod] = distance
+        distance = between_slot_distance_matrix[0,slot]
+        between_prod_distance_matrix[0,prod] = distance
 
     # from product to door
     for prod in range(1, num_products+1):
         slot = slot_assignments[prod]
-        distance = old_matrix[slot,0]
-        new_matrix[prod,0] = distance
+        distance = between_slot_distance_matrix[slot,0]
+        between_prod_distance_matrix[prod,0] = distance
 
-    return new_matrix
+    return between_prod_distance_matrix

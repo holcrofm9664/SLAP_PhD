@@ -1,12 +1,21 @@
 import gurobipy as gp
 from gurobipy import GRB
 import numpy as np
+from typing import Tuple
 
-def solve_single_tsp(order, M):
+def solve_single_tsp(order:list[int], between_aisle_dist:float) -> float:
     """
-    Solve a TSP for a single order and return the optimal distance.
-    Node 0 is the door.
+    Solves a TSP for a single order given fixed product assignments. Node 0 is taken as being the input/output
+
+    Inputs:
+    - order: a single order, used to achieve the aisle assignments
+    - between_aisle_dist: the distance between consecutive aisles within the warehouse
+
+    Outputs:
+    - distance: the route distance for this order
     """
+
+    M = between_aisle_dist
 
     nodes = [0] + order
     n = len(nodes)
@@ -51,17 +60,24 @@ def solve_single_tsp(order, M):
     return total_distance
 
 
-def total_distance_for_all_orders(orders, M):
+def total_distance_for_all_orders(orders:dict[int,list[int]], between_aisle_dist:float) -> Tuple[float,dict[int,float]]:
     """
-    Compute minimal picking route distance for each order
-    and return the total distance across all orders.
+    Calculates the routing distance for all orders and sums them together to obtain the total distance
+
+    Inputs: 
+    orders: the dictionary of all orders used to achieve the aisle assignments
+    between_aisle_dist: the distance between consecutive aisles within the warehouse
+
+    Outputs:
+    - total: the total distance travelled during picker routing over all orders
+    - per_order: the distance travelled for each order
     """
 
     total = 0
     per_order = {}
 
     for order_id, order_list in orders.items():
-        d = solve_single_tsp(order_list, M)
+        d = solve_single_tsp(order_list, between_aisle_dist)
         per_order[order_id] = d
         total += d
 
