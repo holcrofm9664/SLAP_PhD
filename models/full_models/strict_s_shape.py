@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from typing import Tuple, Any
 
-def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, orders:dict[int,list[int]], **unused:Any) -> tuple[int, float, float, dict[int:Tuple[int,int]]]:
+def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, orders:dict[int,list[int]], time_limit = 3600, **unused:Any) -> tuple[int, float, float, dict[int:Tuple[int,int]]]:
     """
     The Strict S-Shape model for a warehouse with alternating directional aisles and no transverse
 
@@ -15,6 +15,7 @@ def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisl
     - between_aisle_dist: the distance between consecutive aisles
     - between_bay_dist: the distance between consecutive rows
     - orders: the set of orders
+    - time_limit: how long the user would like the model to run for
 
     Outputs:
     - status (int): the final model status
@@ -40,7 +41,7 @@ def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisl
         return 3, np.inf, np.inf, []
     
     gp.setParam('OutputFlag',0)
-    gp.setParam('TimeLimit',1)
+    gp.setParam('TimeLimit',time_limit)
 
     N = between_bay_dist
     M = between_aisle_dist
@@ -248,6 +249,13 @@ def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisl
     )
 
     model.optimize()
+
+    if model.Status == GRB.TIME_LIMIT:
+        print(f"Model could not be solved to optimality within the time limit of {time_limit} seconds")
+
+    if model.Status == GRB.INFEASIBLE:
+        print("Model is infeasible")
+        model.write("infeasible.ilp")
 
     placements = []
     for a in A:
