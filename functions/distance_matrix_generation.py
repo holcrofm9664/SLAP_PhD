@@ -66,7 +66,7 @@ def build_distance_matrix(pairwise_distance_function:Callable, num_aisles:int, n
 
 # creating the distance matrix for the transverse warehouse
 
-def build_distance_matrix_transverse(num_aisles, num_bays, M, N):
+def build_distance_matrix_transverse(num_aisles, num_bays, M, N, penalty):
 
     num_slots = num_bays * num_aisles
     D = np.zeros((num_slots, num_slots))
@@ -152,9 +152,9 @@ def build_distance_matrix_transverse(num_aisles, num_bays, M, N):
                     D[slot_1-1,slot_2-1] = (num_bays/2 + 1)*N
                 else:
                     #print(f"{slot_1}, {slot_2} entered_inf")
-                    D[slot_1-1,slot_2-1] = np.inf
+                    D[slot_1-1,slot_2-1] = penalty
             else:
-                D[slot_1-1,slot_2-1] = np.inf
+                D[slot_1-1,slot_2-1] = penalty
 
     # generating the distances from the door to each of the slots
     D_row = np.zeros((1,num_slots))
@@ -197,29 +197,29 @@ def build_distance_matrix_transverse(num_aisles, num_bays, M, N):
     return D_full
 
 
-def build_pairwise_product_distance_matrix(assignments, num_aisles, num_bays, capacity, between_aisle_dist, between_bay_dist):
+def build_pairwise_product_distance_matrix(slot_assignments, num_aisles, num_bays, capacity, between_aisle_dist, between_bay_dist, penalty):
 
-    old_matrix = build_distance_matrix_transverse(num_aisles, num_bays, between_aisle_dist, between_bay_dist)
+    old_matrix = build_distance_matrix_transverse(num_aisles, num_bays, between_aisle_dist, between_bay_dist, penalty)
     num_slots = num_aisles * num_bays
     num_products = num_slots * capacity
     new_matrix = np.zeros((num_products+1, num_products+1))
     
-    for prod_1 in range(1, num_products + 1):
-        for prod_2 in range(1, num_products + 1):
-            slot_1 = assignments[prod_1]
-            slot_2 = assignments[prod_2]
+    for prod_1 in range(1, num_products+1):
+        for prod_2 in range(1, num_products+1):
+            slot_1 = slot_assignments[prod_1]
+            slot_2 = slot_assignments[prod_2]
             distance = old_matrix[slot_1, slot_2]
             new_matrix[prod_1,prod_2] = distance
 
     # from door to product
     for prod in range(1, num_products+1):
-        slot = assignments[prod]
+        slot = slot_assignments[prod]
         distance = old_matrix[0,slot]
         new_matrix[0,prod] = distance
 
     # from product to door
     for prod in range(1, num_products+1):
-        slot = assignments[prod]
+        slot = slot_assignments[prod]
         distance = old_matrix[slot,0]
         new_matrix[prod,0] = distance
 
