@@ -54,16 +54,11 @@ def weight_fragility(orders:dict[int,list[int]], crushing_array:np.ndarray[int],
 
         # constraints for ensuring that similar products are placed close to each other
         for j in I:
-            if j > i:
+            if j != i:    
                 if c[i] == c[j]:
                     model.addConstr(
                         gp.quicksum(b*x[i,b] for b in B) - gp.quicksum(b*x[j,b] for b in B) <= cluster_max_distance,
-                        name = f"lower_bound_on_z_for_products_{i}_and_{j}"
-                    )
-
-                    model.addConstr(
-                        -gp.quicksum(b*x[i,b] for b in B) + gp.quicksum(b*x[j,b] for b in B) <= cluster_max_distance,
-                        name = f"upper_bound_on_z_for_products_{i}_and_{j}"
+                        name = f"upper_bound_on_distance_between_products_{i}_and_{j}"
                     )
 
     for b in B:
