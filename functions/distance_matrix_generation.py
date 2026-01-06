@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Callable, Any
+from typing import Callable, Any, Tuple
 
 def dist_i_j_strict_s_shape(i:int, j:int, num_bays:int, between_aisle_dist:float, between_bay_dist:float, big_M:float, **unused:Any) -> int:
     """
@@ -64,8 +64,6 @@ def build_distance_matrix(pairwise_distance_function:Callable, num_aisles:int, n
 
 # creating the distance matrix for the transverse warehouse
 
-# creating the distance matrix for the transverse warehouse
-
 def build_distance_matrix_transverse(num_aisles:int, num_bays:int, between_aisle_distance:float, between_bay_distance:float, penalty:float) -> np.ndarray:
     """
     Calculates the pairwise distances between slots in a warehouse with directional aisles and a single transverse 
@@ -84,126 +82,143 @@ def build_distance_matrix_transverse(num_aisles:int, num_bays:int, between_aisle
     num_slots = num_bays * num_aisles
     M = between_aisle_distance
     N = between_bay_distance
+
+    # initialise the distance matrix
     D = np.zeros((num_slots, num_slots))
 
+    # generate the slots we will work through
+    slots = [(x,y) for x in range(1, num_aisles+1) for y in range(1, num_bays+1)]
+
     # generating the matrix of pairwise distances between slots
-    for slot_1 in range(1, num_slots + 1):
-        for slot_2 in range(1, num_slots + 1):
-            aisle_1 = np.ceil(slot_1/num_bays)
-            aisle_2 = np.ceil(slot_2/num_bays)
+    for slot_1 in slots:
+        #print(f"slot 1:{slot_1}")
+        for slot_2 in slots:
+            #print(f"slot 2:{slot_2}")
+            aisle_1 = slot_1[0] # calculate the aisles and bays now for use later
+            aisle_2 = slot_2[0]
+            bay_1 = slot_1[1]
+            bay_2 = slot_2[1]
             aisle_diff = aisle_2 - aisle_1
+            #print(f"slot 1:{(aisle_1, bay_1)}, slot_2:{aisle_2, bay_2}, slot_2:{slot_2}")
 
             # if the second slot is further into the warehouse than the first slot
-            if aisle_diff > 0:
-
+            if aisle_diff > 0.5:
+                #print("Entered First Loop")
                 # if both slots are in the bottom half
-                if ((slot_1-1) % num_bays)+1 <= num_bays/2 and ((slot_2-1) % num_bays)+1 <= num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 1: # BB, OO
+                if bay_1 <= num_bays/2 and bay_2 <= num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 1: # BB, OO
                     #print(f"{slot_1},{slot_2} entered_1")
-                    D[slot_1-1,slot_2-1] = 2*(num_bays/2 + 1)*N + M * aisle_diff # BB, UU
-                elif ((slot_1-1) % num_bays)+1 <= num_bays/2 and ((slot_2-1) % num_bays)+1 > num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 0: # BB, OE
+                    D[slots.index(slot_1), slots.index(slot_2)] = 2*(num_bays/2 + 1)*N + M * aisle_diff # BB, UU
+                elif bay_1 <= num_bays/2 and bay_2 <= num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 0: # BB, OE
                     #print(f"{slot_1},{slot_2} entered_2")
-                    D[slot_1-1,slot_2-1] = (num_bays/2 + 1)*N + M * aisle_diff # BB, UD
-                elif ((slot_1-1) % num_bays)+1 > num_bays/2 and ((slot_2-1) % num_bays)+1 > num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 0: # BB, EE
-                    D[slot_1-1,slot_2-1] = 2*(num_bays/2 + 1)*N + M * aisle_diff # BB, DD
+                    D[slots.index(slot_1), slots.index(slot_2)] = (num_bays/2 + 1)*N + M * aisle_diff # BB, UD
+                elif bay_1 <= num_bays/2 and bay_2 <= num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 0: # BB, EE
+                    D[slots.index(slot_1), slots.index(slot_2)] = 2*(num_bays/2 + 1)*N + M * aisle_diff # BB, DD
                     #print(f"{slot_1},{slot_2} entered_3")
-                elif ((slot_1-1) % num_bays)+1 > num_bays/2 and ((slot_2-1) % num_bays)+1 <= num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 1: # BB, EO
-                    D[slot_1-1,slot_2-1] = (num_bays/2 + 1)*N + M * aisle_diff # BB, DU
+                elif bay_1 <= num_bays/2 and bay_2 <= num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 1: # BB, EO
+                    D[slots.index(slot_1), slots.index(slot_2)] = (num_bays/2 + 1)*N + M * aisle_diff # BB, DU
                     #print(f"{slot_1},{slot_2} entered_4")
 
 
                 # if the first slot is in the bottom half and the second slot is in the top half
-                elif ((slot_1-1) % num_bays)+1 <= num_bays/2 and ((slot_2-1) % num_bays)+1 > num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 1: # BT, OO
-                    D[slot_1-1,slot_2-1] = (num_bays/2 + 1)*N + M * aisle_diff # BT, UU
+                elif bay_1 <= num_bays/2 and bay_2 > num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 1: # BT, OO
+                    D[slots.index(slot_1), slots.index(slot_2)] = (num_bays/2 + 1)*N + M * aisle_diff # BT, UU
                     #print(f"{slot_1},{slot_2} entered_5")
-                elif ((slot_1-1) % num_bays)+1 <= num_bays/2 and ((slot_2-1) % num_bays)+1 <= num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 0: # BT, OE
-                    D[slot_1-1,slot_2-1] = 2*(num_bays/2 + 1)*N + M * aisle_diff # BT, UD
+                elif bay_1 <= num_bays/2 and bay_2 > num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 0: # BT, OE
+                    D[slots.index(slot_1), slots.index(slot_2)] = 2*(num_bays/2 + 1)*N + M * aisle_diff # BT, UD
                     #print(f"{slot_1},{slot_2} entered_6")
-                elif ((slot_1-1) % num_bays)+1 > num_bays/2 and ((slot_2-1) % num_bays)+1 <= num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 0: # BT, EE
-                    D[slot_1-1,slot_2-1] = 3*(num_bays/2 + 1)*N + M * aisle_diff # BT, DD
+                elif bay_1 <= num_bays/2 and bay_2 > num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 0: # BT, EE
+                    D[slots.index(slot_1), slots.index(slot_2)] = 3*(num_bays/2 + 1)*N + M * aisle_diff # BT, DD
                     #print(f"{slot_1},{slot_2} entered_7")
-                elif ((slot_1-1) % num_bays)+1 > num_bays/2 and ((slot_2-1) % num_bays)+1 > num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 1: # BT, EO
-                    D[slot_1-1,slot_2-1] = 2*(num_bays/2 + 1)*N + M * aisle_diff # BT, DU
+                elif bay_1 <= num_bays/2 and bay_2 > num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 1: # BT, EO
+                    D[slots.index(slot_1), slots.index(slot_2)] = 2*(num_bays/2 + 1)*N + M * aisle_diff # BT, DU
                     #print(f"{slot_1},{slot_2} entered_8")
 
 
                 # if the first slot is in the top half and the second slot is in the bottom half
-                elif ((slot_1-1) % num_bays)+1 > num_bays/2 and ((slot_2-1) % num_bays)+1 <= num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 1: # TB, OO
-                    D[slot_1-1,slot_2-1] = 3*(num_bays/2 + 1)*N + M * aisle_diff # TB, UU
+                elif bay_1 > num_bays/2 and bay_2 <= num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 1: # TB, OO
+                    D[slots.index(slot_1), slots.index(slot_2)] = 3*(num_bays/2 + 1)*N + M * aisle_diff # TB, UU
                     #print(f"{slot_1},{slot_2} entered_9")
-                elif ((slot_1-1) % num_bays)+1 > num_bays/2 and ((slot_2-1) % num_bays)+1 > num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 0: # TB, OE
-                    D[slot_1-1,slot_2-1] = 2*(num_bays/2 + 1)*N + M * aisle_diff # TB, UD
+                elif bay_1 > num_bays/2 and bay_2 <= num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 0: # TB, OE
+                    D[slots.index(slot_1), slots.index(slot_2)] = 2*(num_bays/2 + 1)*N + M * aisle_diff # TB, UD
                     #print(f"{slot_1},{slot_2} entered_10")
-                elif ((slot_1-1) % num_bays)+1 <= num_bays/2 and ((slot_2-1) % num_bays)+1 > num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 0: # TB, EE
-                    D[slot_1-1,slot_2-1] = (num_bays/2 + 1)*N + M * aisle_diff # TB, DD
+                elif bay_1 > num_bays/2 and bay_2 <= num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 0: # TB, EE
+                    D[slots.index(slot_1), slots.index(slot_2)] = (num_bays/2 + 1)*N + M * aisle_diff # TB, DD
                     #print(f"{slot_1},{slot_2} entered_11")
-                elif ((slot_1-1) % num_bays)+1 <= num_bays/2 and ((slot_2-1) % num_bays)+1 <= num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 1: # TB, EO
-                    D[slot_1-1,slot_2-1] = 2*(num_bays/2 + 1)*N + M * aisle_diff # TB, DU
+                elif bay_1 > num_bays/2 and bay_2 <= num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 1: # TB, EO
+                    D[slots.index(slot_1), slots.index(slot_2)] = 2*(num_bays/2 + 1)*N + M * aisle_diff # TB, DU
                     #print(f"{slot_1},{slot_2} entered_12")
 
 
                 # if both slots are in the top half
-                elif ((slot_1-1) % num_bays)+1 > num_bays/2 and ((slot_2-1) % num_bays)+1 > num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 1: # TT, OO
-                    D[slot_1-1,slot_2-1] = 2*(num_bays/2 + 1)*N + M * aisle_diff
+                elif bay_1 > num_bays/2 and bay_2 > num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 1: # TT, OO
+                    D[slots.index(slot_1), slots.index(slot_2)] = 2*(num_bays/2 + 1)*N + M * aisle_diff
                     #print(f"{slot_1},{slot_2} entered_13")
-                elif ((slot_1-1) % num_bays)+1 > num_bays/2 and ((slot_2-1) % num_bays)+1 <= num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 0: # TT, OE
-                    D[slot_1-1,slot_2-1] = (num_bays/2 + 1)*N + M * aisle_diff
+                elif bay_1 > num_bays/2 and bay_2 > num_bays/2 and aisle_1 % 2 == 1 and aisle_2 % 2 == 0: # TT, OE
+                    D[slots.index(slot_1), slots.index(slot_2)] = (num_bays/2 + 1)*N + M * aisle_diff
                     #print(f"{slot_1},{slot_2} entered_14")
-                elif ((slot_1-1) % num_bays)+1 <= num_bays/2 and ((slot_2-1) % num_bays)+1 <= num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 0: # TT, EE
-                    D[slot_1-1,slot_2-1] = 2*(num_bays/2 + 1)*N + M * aisle_diff
+                elif bay_1 > num_bays/2 and bay_2 > num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 0: # TT, EE
+                    D[slots.index(slot_1), slots.index(slot_2)] = 2*(num_bays/2 + 1)*N + M * aisle_diff
                     #print(f"{slot_1},{slot_2} entered_15")   
-                elif ((slot_1-1) % num_bays)+1 <= num_bays/2 and ((slot_2-1) % num_bays)+1 > num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 1: # TB, EO
-                    D[slot_1-1,slot_2-1] = (num_bays/2 + 1)*N + M * aisle_diff
+                elif bay_1 > num_bays/2 and bay_2 > num_bays/2 and aisle_1 % 2 == 0 and aisle_2 % 2 == 1: # TB, EO
+                    D[slots.index(slot_1), slots.index(slot_2)] = (num_bays/2 + 1)*N + M * aisle_diff
                     #print(f"{slot_1},{slot_2} entered_16")
 
             # if the slots are in the same aisle
             elif aisle_diff == 0:
-                if ((slot_1-1) % num_bays)+1 > num_bays/2 and ((slot_2-1) % num_bays)+1 > num_bays/2: # both slots are T
-                    D[slot_1-1,slot_2-1] = 0
-                elif ((slot_1-1) % num_bays)+1 <= num_bays/2 and ((slot_2-1) % num_bays)+1 <= num_bays/2: # both slots are B
-                    D[slot_1-1,slot_2-1] = 0  
-                elif aisle_1 % 2 == 1 and ((slot_1-1) % num_bays)+1 <= num_bays/2 and ((slot_2-1) % num_bays)+1 > num_bays/2: # we are in an up aisle and slot_1 is B and slot_2 is T
-                    D[slot_1-1,slot_2-1] = (num_bays/2 + 1)*N
-                elif aisle_1 % 2 == 0 and ((slot_1-1) % num_bays)+1 <= num_bays/2 and ((slot_2-1) % num_bays)+1 > num_bays/2: # we are in a down aisle slot_1 is T and slot_2 is B
-                    D[slot_1-1,slot_2-1] = (num_bays/2 + 1)*N
+                #print("Entered second loop")
+                #print(f"bay 1:{bay_1}, bay 2:{bay_2}")
+                if bay_1 > num_bays/2 and bay_2 > num_bays/2: # both slots are T
+                    D[slots.index(slot_1), slots.index(slot_2)] = 0
+                    #print("fail to pass 1")
+                elif bay_1 <= num_bays/2 and bay_2 <= num_bays/2: # both slots are B
+                    D[slots.index(slot_1), slots.index(slot_2)] = 0  
+                    #print("fail to pass 2")
+                elif aisle_1 % 2 == 1 and bay_1 <= num_bays/2 and bay_2 > num_bays/2: # we are in an up aisle and slot_1 is B and slot_2 is T
+                    #print("Entered correct place")
+                    D[slots.index(slot_1), slots.index(slot_2)] = (num_bays/2 + 1)*N
+                elif aisle_1 % 2 == 0 and bay_1 > num_bays/2 and bay_2 <= num_bays/2: # we are in a down aisle slot_1 is T and slot_2 is B
+                    D[slots.index(slot_1), slots.index(slot_2)] = (num_bays/2 + 1)*N
                 else:
                     #print(f"{slot_1}, {slot_2} entered_inf")
-                    D[slot_1-1,slot_2-1] = penalty
+                    D[slots.index(slot_1), slots.index(slot_2)] = penalty
             else:
-                D[slot_1-1,slot_2-1] = penalty
+                D[slots.index(slot_1), slots.index(slot_2)] = penalty
 
     # generating the distances from the door to each of the slots
     D_row = np.zeros((1,num_slots))
 
-    for slot in range(1, num_slots +1):
-        aisle = np.ceil(slot/num_bays)
-        if ((slot-1) % num_bays)+1 <= num_bays/2 and aisle % 2 == 1: # B, O
-            D_row[0,slot-1] = (num_bays/2 + 1)*N + (aisle-1)*M
+    for slot in slots:
+        aisle = slot[0]
+        bay = slot[1]
+        if bay <= num_bays/2 and aisle % 2 == 1: # B, O
+            D_row[0,slots.index(slot)] = (num_bays/2 + 1)*N + (aisle-1)*M # adjust here if wrong
 
-        elif ((slot-1) % num_bays)+1 > num_bays/2 and aisle % 2 == 1: # T, O
-            D_row[0,slot-1] = 2*(num_bays/2 + 1)*N + (aisle-1)*M
+        elif bay > num_bays/2 and aisle % 2 == 1: # T, O
+            D_row[0,slots.index(slot)] = 2*(num_bays/2 + 1)*N + (aisle-1)*M
 
-        elif ((slot-1) % num_bays)+1 > num_bays/2 and aisle % 2 == 0: # B, E
-            D_row[0,slot-1] = 2*(num_bays/2 + 1)*N + (aisle-1)*M
+        elif bay <= num_bays/2 and aisle % 2 == 0: # B, E
+            D_row[0,slots.index(slot)] = 2*(num_bays/2 + 1)*N + (aisle-1)*M
 
-        elif ((slot-1) % num_bays)+1 <= num_bays/2 and aisle % 2 == 0: # T, E
-            D_row[0,slot-1] = 3*(num_bays/2 + 1)*N + (aisle-1)*M
+        elif bay > num_bays/2 and aisle % 2 == 0: # T, E
+            D_row[0,slots.index(slot)] = 3*(num_bays/2 + 1)*N + (aisle-1)*M
 
     # generating the distances from each of the slots to the door
     D_col = np.zeros((num_slots+1,1))
 
-    for slot in range(1, num_slots + 1):
-        aisle = np.ceil(slot/num_bays)
-        if ((slot-1) % num_bays)+1 <= num_bays/2 and aisle % 2 == 1: # B, O
-            D_col[slot,0] = (num_bays/2 + 1)*N + M*max(aisle-1, 2)
+    for slot in slots:
+        aisle = slot[0]
+        bay = slot[1]
+        if bay <= num_bays/2 and aisle % 2 == 1: # B, O
+            D_col[slots.index(slot)+1,0] = (num_bays/2 + 1)*N + M*max(aisle-1, 2)
 
-        elif ((slot-1) % num_bays)+1 > num_bays/2 and aisle % 2 == 1: # T, O
-            D_col[slot,0] = 2*(num_bays/2 + 1)*N + M*max(aisle-1, 2)
+        elif bay > num_bays/2 and aisle % 2 == 1: # T, O
+            D_col[slots.index(slot)+1,0] = 2*(num_bays/2 + 1)*N + M*max(aisle-1, 2)
 
-        elif ((slot-1) % num_bays)+1 > num_bays/2 and aisle % 2 == 0: # B, E
-            D_col[slot,0] = (aisle-1)*M
+        elif bay <= num_bays/2 and aisle % 2 == 0: # B, E
+            D_col[slots.index(slot)+1,0] = (aisle-1)*M
 
-        elif ((slot-1) % num_bays)+1 <= num_bays/2 and aisle % 2 == 0: # T, E
-            D_col[slot,0] = (num_bays/2 + 1)*N + (aisle-1)*M
+        elif bay > num_bays/2 and aisle % 2 == 0: # T, E
+            D_col[slots.index(slot)+1,0] = (num_bays/2 + 1)*N + (aisle-1)*M
 
     # creating the full pairwise distance matrix, including the door
     D_tall = np.vstack((D_row, D))
@@ -212,7 +227,7 @@ def build_distance_matrix_transverse(num_aisles:int, num_bays:int, between_aisle
     return D_full
 
 
-def build_pairwise_product_distance_matrix(slot_assignments:dict[int,int], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, penalty:int) -> np.ndarray:
+def build_pairwise_product_distance_matrix(slot_assignments:dict[int,Tuple[int,int]], slots:list[Tuple[int,int]], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, penalty:int) -> np.ndarray:
     """
     Takes the matrix for the pairwise distances between slots in the warehouse and the product assignments to create a new distance matrix for the pairwise distances between products
 
@@ -226,31 +241,36 @@ def build_pairwise_product_distance_matrix(slot_assignments:dict[int,int], num_a
     - penalty: the penalty enforcing aisle directionality
 
     Outputs:
-    - diatance_matrix: the matrix of pairwise distances between products in the warehouse
+    - distance_matrix: the matrix of pairwise distances between products in the warehouse
     """
 
     between_slot_distance_matrix = build_distance_matrix_transverse(num_aisles, num_bays, between_aisle_dist, between_bay_dist, penalty)
+    print(between_slot_distance_matrix)
     num_slots = num_aisles * num_bays
     num_products = num_slots * slot_capacity
     between_prod_distance_matrix = np.zeros((num_products+1, num_products+1))
+    print(slots)
+    
     
     for prod_1 in range(1, num_products+1):
         for prod_2 in range(1, num_products+1):
-            slot_1 = slot_assignments[prod_1]
+            slot_1 = slot_assignments[prod_1] # extracts the tuple associated with the slot to which the product is assigned
             slot_2 = slot_assignments[prod_2]
-            distance = between_slot_distance_matrix[slot_1, slot_2]
-            between_prod_distance_matrix[prod_1,prod_2] = distance
+            print(f"prod_1:{prod_1}, prod_2:{prod_2}, slot_1:{slot_1}, slot_2:{slot_2}")
+            distance = between_slot_distance_matrix[slots.index(slot_1)+1, slots.index(slot_2)+1] # extract the distance between the two slots to whih the products are assigned
+            print(f"distance:{distance}")
+            between_prod_distance_matrix[prod_1,prod_2] = distance # this is equal to the distance between the two products
 
     # from door to product
     for prod in range(1, num_products+1):
         slot = slot_assignments[prod]
-        distance = between_slot_distance_matrix[0,slot]
+        distance = between_slot_distance_matrix[0,slots.index(slot)+1]
         between_prod_distance_matrix[0,prod] = distance
 
     # from product to door
     for prod in range(1, num_products+1):
         slot = slot_assignments[prod]
-        distance = between_slot_distance_matrix[slot,0]
+        distance = between_slot_distance_matrix[slots.index(slot)+1,0]
         between_prod_distance_matrix[prod,0] = distance
 
     return between_prod_distance_matrix
