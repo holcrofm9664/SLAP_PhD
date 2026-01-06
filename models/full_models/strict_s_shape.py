@@ -257,6 +257,19 @@ def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisl
         print("Model is infeasible")
         model.write("infeasible.ilp")
 
+    aisle_assignments_dict = {}
+
+    for aisle in range(1, num_aisles + 1):
+        prods = []
+        for prod in P:
+            if x[aisle,prod].X > 0.5:
+                prods.append(prod)
+        aisle_assignments_dict[aisle] = prods
+
+
+
+
+
     placements = []
     for a in A:
         for k in P:
@@ -270,4 +283,4 @@ def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisl
               for _, row in df.iterrows()}
 
 
-    return model.Status, model.ObjVal, model.Runtime, assignment
+    return model.Status, model.ObjVal, model.Runtime, assignment, aisle_assignments_dict

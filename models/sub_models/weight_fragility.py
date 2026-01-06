@@ -4,7 +4,7 @@ from gurobipy import GRB
 from typing import Tuple
 from collections import Counter
 
-def weight_fragility(orders:dict[int,list[int]], crushing_array:np.ndarray[int], cluster_assignments:list[int], num_bays:int, slot_capacity:int, cluster_max_distance:int) -> Tuple[int, float, list[tuple[int,int]]]:
+def weight_fragility(prods_in_aisle:list[int], orders:dict[int,list[int]], crushing_array:np.ndarray[int], cluster_assignments:list[int], num_bays:int, slot_capacity:int, cluster_max_distance:int, aisle:int, slot_assignments_dict:dict[int:tuple[int,int]], output_flag:bool) -> Tuple[int, float, list[tuple[int,int]]]:
     """
     The second stage model which assigns products to bays within one aisle (to which they were assigned in the first stage). 
     
@@ -15,6 +15,7 @@ def weight_fragility(orders:dict[int,list[int]], crushing_array:np.ndarray[int],
     - num_bays: the number of bays the aisle is split into
     - slot_capacity: the capacity of one bay, the standard being 2
     - cluster_max_distance: the maximum number of bays apart two items belonging to the same cluster should be placed. 
+    - output_flag: whether the user wishes to see full output of model solving
 
     Outputs:
     - status: whether a feasible solution was found
@@ -25,6 +26,7 @@ def weight_fragility(orders:dict[int,list[int]], crushing_array:np.ndarray[int],
     # initialising the model
     model = gp.Model("weight_fragility")
 
+    model.setParam("OutputFlag", output_flag)
     c = {}
 
     for i in range(1, len(cluster_assignments) + 1):
@@ -37,9 +39,9 @@ def weight_fragility(orders:dict[int,list[int]], crushing_array:np.ndarray[int],
 
     # sets
     B = range(1, num_bays + 1)
-    I = range(1, num_products + 1)
+    I = prods_in_aisle
     Q = orders
-    O = range(1, len(Q) + 1)
+    O = list(orders.keys())
 
     # variables
     x = model.addVars(I, B, vtype = GRB.BINARY, name = "x") # assignment of products to slots
@@ -91,10 +93,16 @@ def weight_fragility(orders:dict[int,list[int]], crushing_array:np.ndarray[int],
         model.computeIIS()
         model.write("infeasible.ilp")
 
-    for o in O:
+    if aisle % 2 == 1:
         for i in I:
             for b in B:
-                print(p[i,o].X)
+                if x[i,b].X > 0.5:
+                    slot_assignments_dict[i] = (aisle, b)
+    elif aisle % 2 == 0:
+        for i in I:
+            for b in B:
+                if x[i,b].X > 0.5:
+                    slot_assignments_dict[i] = (aisle, len(B)-b)
 
     placements = []
     for i in I:
@@ -103,4 +111,4 @@ def weight_fragility(orders:dict[int,list[int]], crushing_array:np.ndarray[int],
                 placements.append((int(i),int(b)))
 
 
-    return model.Status, model.ObjVal, placements
+    return model.Status, model.ObjVal, model.Runtime, placements, slot_assignments_dict
