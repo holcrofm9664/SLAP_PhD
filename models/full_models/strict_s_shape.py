@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from typing import Tuple, Any
 
-def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, orders:dict[int,list[int]], time_limit = 3600, **unused:Any) -> tuple[int, float, float, dict[int:Tuple[int,int]]]:
+def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, orders:dict[int,list[int]], time_limit = 3600, **unused:Any) -> Tuple[int, float, float, dict[int:Tuple[int,int]]]:
     """
     The Strict S-Shape model for a warehouse with alternating directional aisles and no transverse
 
@@ -18,10 +18,10 @@ def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisl
     - time_limit: how long the user would like the model to run for
 
     Outputs:
-    - status (int): the final model status
-    - distance (float): the distance achieved by the model, taken as the objective value
-    - runtime (float): the runtime of the model
-    - assignment (dict): the assignment of products to aisles
+    - status: the final model status
+    - distance: the distance achieved by the model, taken as the objective value
+    - runtime: the runtime of the model
+    - aisle_assignments_dict: the assignment of products to aisles
     """
 
     all_prods = []

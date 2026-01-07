@@ -9,20 +9,24 @@ def weight_fragility(prods_in_aisle:list[int], orders:dict[int,list[int]], crush
     The second stage model which assigns products to bays within one aisle (to which they were assigned in the first stage). 
     
     Inputs
+    - prods_in_aisle: the products assigned to the aisle we are optimising
     - orders: the set of orders used to assign products. These are needed as a product can only be crushed by another product if they are in the same order
     - crushing_array: an array of size num_products x num_products, showing if the second product can crush the first (1) or not (0)
     - cluster_assignments: a list giving which cluster each product belongs to. This could be the aisle the product belongs to in the destination shop, or something more general
     - num_bays: the number of bays the aisle is split into
     - slot_capacity: the capacity of one bay, the standard being 2
-    - cluster_max_distance: the maximum number of bays apart two items belonging to the same cluster should be placed. 
+    - cluster_max_distance: the maximum number of bays apart two items belonging to the same cluster should be placed.
+    - aisle: the aisle we are optimising
+    - slot_assignments_dict: the dictionary of assignments of products to slots 
     - output_flag: whether the user wishes to see full output of model solving
 
     Outputs:
     - status: whether a feasible solution was found
     - objective value: the number of crushing events which would have occurred had the assignment been used on the set of orders
-    - assignments: the assignments of products to bays
-    
+    - runtime: the model runtime
+    - slot_assignments_dict: the updated assignments dictionary, now containing products assigned to this aisle
     """
+    
     # initialising the model
     model = gp.Model("weight_fragility")
 
@@ -80,7 +84,6 @@ def weight_fragility(prods_in_aisle:list[int], orders:dict[int,list[int]], crush
                 )
                 
                 
-
     # objective
     model.setObjective(
         gp.quicksum(p[i,o] for i in I for b in B for o in O),
@@ -104,11 +107,5 @@ def weight_fragility(prods_in_aisle:list[int], orders:dict[int,list[int]], crush
                 if x[i,b].X > 0.5:
                     slot_assignments_dict[i] = (aisle, len(B)-b+1)
 
-    placements = []
-    for i in I:
-        for b in B:
-            if x[i,b].X > 0.5:
-                placements.append((int(i),int(b)))
 
-
-    return model.Status, model.ObjVal, model.Runtime, placements, slot_assignments_dict
+    return model.Status, model.ObjVal, model.Runtime, slot_assignments_dict

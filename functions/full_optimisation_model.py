@@ -3,9 +3,32 @@ from models.full_models.strict_s_shape import Strict_S_Shape
 from models.sub_models.weight_fragility import weight_fragility
 from functions.tsp import total_distance_for_all_orders
 import numpy as np
+import pandas as pd
+from typing import Tuple
 
-def full_optimisation_model(product_df, orders, num_aisles, num_bays, slot_capacity, between_aisle_dist, between_bay_dist, crushing_multiple, cluster_max_distance, backtrack_penalty, time_limit):
-    
+def full_optimisation_model(product_df:pd.DataFrame, orders:dict[int:tuple[int,int]], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, crushing_multiple:float, cluster_max_distance:int, backtrack_penalty:float, time_limit:float) -> Tuple[dict[int:tuple[int,int]], float, float]:
+    """
+    A function which takes in the product attributes, orders, and warehouse dimensions, and runs the full optimisation model to assign products to individual slots and calculate the distance for both the warehouse with the transverse and without
+
+    Inputs:
+    - product_df: a pandas dataframe containing product attributes, including their id, weight and cluster (which could be interpreted as aisle/zone in destination store)
+    - orders: a dictionary of orders
+    - num_aisles: the number of aisles in the warehouse
+    - num_bays: the number of bays each aisle is divided into
+    - slot_capacity: the number of products able to be assigned to each (aisle,bay) pair. The standard is 2
+    - between_aisle_dist: the distance between two consecutive aisles
+    - between_bay_dist: the distance between two consecutive bays
+    - crushing_multiple: how much heavier (in multiples of the lighter product's weight) a heavier product needs to be to crush it. Used to make the crushing array
+    - cluster_max_distance: the maximum distance apart two products within the same cluster two products can be placed within one aisle
+    - backtrack_penalty: the penalty for backtracking against a one-way system 
+    - time_limit: the time allocated for the assignment of products to aisles
+
+    Outputs:
+    - slot_assignments_dict: the dictionary containing the assignments of products to slots
+    - distance_no_transverse: the distance found after assigning products to aisles, assuming that the warehouse does not contain a transverse
+    - distance_transverse: the distabce found after assigning products to specific slots and assuming a transverse aisle exists
+    """
+
     # ensure that an even number of bays is entered (such that the aisle may be split in half to include the transverse)
     if num_bays % 2 != 0:
         print("The warehouse must have an even number of bays")
@@ -48,7 +71,7 @@ def full_optimisation_model(product_df, orders, num_aisles, num_bays, slot_capac
 
     # calculate the pairwise product distance matrix assuming now that the warehouse has a transverse bisecting aisles
 
-    between_product_distance_matrix = build_pairwise_product_distance_matrix(slot_assignments_dict, slots, 2, 4, 2, 1, 1, 100)
+    between_product_distance_matrix = build_pairwise_product_distance_matrix(slot_assignments_dict = slot_assignments_dict, slots = slots, num_aisles=num_aisles, num_bays=num_bays, slot_capacity=slot_capacity, between_aisle_dict=between_aisle_dist, between_bay_dist=between_bay_dist, backtrack_penalty=backtrack_penalty)
 
     distance_transverse, per_order = total_distance_for_all_orders(orders, between_product_distance_matrix=between_product_distance_matrix)
 

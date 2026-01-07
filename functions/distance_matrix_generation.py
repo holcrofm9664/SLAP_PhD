@@ -64,7 +64,7 @@ def build_distance_matrix(pairwise_distance_function:Callable, num_aisles:int, n
 
 # creating the distance matrix for the transverse warehouse
 
-def build_distance_matrix_transverse(num_aisles:int, num_bays:int, between_aisle_distance:float, between_bay_distance:float, penalty:float) -> np.ndarray:
+def build_distance_matrix_transverse(num_aisles:int, num_bays:int, between_aisle_distance:float, between_bay_distance:float, backtrack_penalty:float) -> np.ndarray:
     """
     Calculates the pairwise distances between slots in a warehouse with directional aisles and a single transverse 
 
@@ -180,9 +180,9 @@ def build_distance_matrix_transverse(num_aisles:int, num_bays:int, between_aisle
                     D[slots.index(slot_1), slots.index(slot_2)] = (num_bays/2 + 1)*N
                 else:
                     #print(f"{slot_1}, {slot_2} entered_inf")
-                    D[slots.index(slot_1), slots.index(slot_2)] = penalty
+                    D[slots.index(slot_1), slots.index(slot_2)] = backtrack_penalty
             else:
-                D[slots.index(slot_1), slots.index(slot_2)] = penalty
+                D[slots.index(slot_1), slots.index(slot_2)] = backtrack_penalty
 
     # generating the distances from the door to each of the slots
     D_row = np.zeros((1,num_slots))
@@ -227,12 +227,12 @@ def build_distance_matrix_transverse(num_aisles:int, num_bays:int, between_aisle
     return D_full
 
 
-def build_pairwise_product_distance_matrix(slot_assignments:dict[int,Tuple[int,int]], slots:list[Tuple[int,int]], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, penalty:int) -> np.ndarray:
+def build_pairwise_product_distance_matrix(slot_assignments_dict:dict[int,Tuple[int,int]], slots:list[Tuple[int,int]], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, penalty:int) -> np.ndarray:
     """
     Takes the matrix for the pairwise distances between slots in the warehouse and the product assignments to create a new distance matrix for the pairwise distances between products
 
     Inputs:
-    - slot_assignments: the assignments of products to slots
+    - slot_assignments_dict: the assignments of products to slots
     - num_aisles: the number of aisles in the warehouse
     - num_bays: the number of bays in the warehouse
     - slot_capacity: the capacity of a single slot in the warehouse. The standard is two
@@ -244,28 +244,28 @@ def build_pairwise_product_distance_matrix(slot_assignments:dict[int,Tuple[int,i
     - distance_matrix: the matrix of pairwise distances between products in the warehouse
     """
 
-    between_slot_distance_matrix = build_distance_matrix_transverse(num_aisles, num_bays, between_aisle_dist, between_bay_dist, penalty)
+    between_slot_distance_matrix = build_distance_matrix_transverse(num_aisles, num_bays, between_aisle_dist, between_bay_dist, backtrack_penalty)
     num_slots = num_aisles * num_bays
     num_products = num_slots * slot_capacity
     between_prod_distance_matrix = np.zeros((num_products+1, num_products+1))
     
-    
+    # between pairs of products
     for prod_1 in range(1, num_products+1):
         for prod_2 in range(1, num_products+1):
-            slot_1 = slot_assignments[prod_1] # extracts the tuple associated with the slot to which the product is assigned
-            slot_2 = slot_assignments[prod_2]
+            slot_1 = slot_assignments_dict[prod_1] # extracts the tuple associated with the slot to which the product is assigned
+            slot_2 = slot_assignments_dict[prod_2]
             distance = between_slot_distance_matrix[slots.index(slot_1)+1, slots.index(slot_2)+1] # extract the distance between the two slots to whih the products are assigned
             between_prod_distance_matrix[prod_1,prod_2] = distance # this is equal to the distance between the two products
 
     # from door to product
     for prod in range(1, num_products+1):
-        slot = slot_assignments[prod]
+        slot = slot_assignments_dict[prod]
         distance = between_slot_distance_matrix[0,slots.index(slot)+1]
         between_prod_distance_matrix[0,prod] = distance
 
     # from product to door
     for prod in range(1, num_products+1):
-        slot = slot_assignments[prod]
+        slot = slot_assignments_dict[prod]
         distance = between_slot_distance_matrix[slots.index(slot)+1,0]
         between_prod_distance_matrix[prod,0] = distance
 

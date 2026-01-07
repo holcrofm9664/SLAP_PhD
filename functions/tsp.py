@@ -3,13 +3,13 @@ from gurobipy import GRB
 import numpy as np
 from typing import Tuple
 
-def solve_single_tsp(order:list[int], between_product_distance_matrix:float) -> float:
+def solve_single_tsp(order:list[int], between_product_distance_matrix:np.ndarray[int,int]) -> float:
     """
     Solves a TSP for a single order given fixed product assignments. Node 0 is taken as being the input/output
 
     Inputs:
     - order: a single order, used to achieve the aisle assignments
-    - between_aisle_dist: the distance between consecutive aisles within the warehouse
+    - between_product_distance_matrix: a numpy array containing the pairwise distances between pairs of slots, including the door
 
     Outputs:
     - distance: the route distance for this order
@@ -66,7 +66,7 @@ def total_distance_for_all_orders(orders:dict[int,list[int]], between_product_di
 
     Inputs: 
     orders: the dictionary of all orders used to achieve the aisle assignments
-    between_aisle_dist: the distance between consecutive aisles within the warehouse
+    between_product_distance_matrix: a numpy array containing the pairwise distances between pairs of slots, including the door
 
     Outputs:
     - total: the total distance travelled during picker routing over all orders
