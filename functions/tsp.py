@@ -3,7 +3,7 @@ from gurobipy import GRB
 import numpy as np
 from typing import Tuple
 
-def solve_single_tsp(order:list[int], between_aisle_dist:float) -> float:
+def solve_single_tsp(order:list[int], between_product_distance_matrix:float) -> float:
     """
     Solves a TSP for a single order given fixed product assignments. Node 0 is taken as being the input/output
 
@@ -15,7 +15,7 @@ def solve_single_tsp(order:list[int], between_aisle_dist:float) -> float:
     - distance: the route distance for this order
     """
 
-    M = between_aisle_dist
+    M = between_product_distance_matrix
 
     nodes = [0] + order
     n = len(nodes)
@@ -60,7 +60,7 @@ def solve_single_tsp(order:list[int], between_aisle_dist:float) -> float:
     return total_distance
 
 
-def total_distance_for_all_orders(orders:dict[int,list[int]], between_aisle_dist:float) -> Tuple[float,dict[int,float]]:
+def total_distance_for_all_orders(orders:dict[int,list[int]], between_product_distance_matrix:float) -> Tuple[float,dict[int,float]]:
     """
     Calculates the routing distance for all orders and sums them together to obtain the total distance
 
@@ -77,7 +77,7 @@ def total_distance_for_all_orders(orders:dict[int,list[int]], between_aisle_dist
     per_order = {}
 
     for order_id, order_list in orders.items():
-        d = solve_single_tsp(order_list, between_aisle_dist)
+        d = solve_single_tsp(order_list, between_product_distance_matrix)
         per_order[order_id] = d
         total += d
 

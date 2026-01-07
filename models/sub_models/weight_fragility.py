@@ -102,7 +102,7 @@ def weight_fragility(prods_in_aisle:list[int], orders:dict[int,list[int]], crush
         for i in I:
             for b in B:
                 if x[i,b].X > 0.5:
-                    slot_assignments_dict[i] = (aisle, len(B)-b)
+                    slot_assignments_dict[i] = (aisle, len(B)-b+1)
 
     placements = []
     for i in I:

@@ -245,20 +245,16 @@ def build_pairwise_product_distance_matrix(slot_assignments:dict[int,Tuple[int,i
     """
 
     between_slot_distance_matrix = build_distance_matrix_transverse(num_aisles, num_bays, between_aisle_dist, between_bay_dist, penalty)
-    print(between_slot_distance_matrix)
     num_slots = num_aisles * num_bays
     num_products = num_slots * slot_capacity
     between_prod_distance_matrix = np.zeros((num_products+1, num_products+1))
-    print(slots)
     
     
     for prod_1 in range(1, num_products+1):
         for prod_2 in range(1, num_products+1):
             slot_1 = slot_assignments[prod_1] # extracts the tuple associated with the slot to which the product is assigned
             slot_2 = slot_assignments[prod_2]
-            print(f"prod_1:{prod_1}, prod_2:{prod_2}, slot_1:{slot_1}, slot_2:{slot_2}")
             distance = between_slot_distance_matrix[slots.index(slot_1)+1, slots.index(slot_2)+1] # extract the distance between the two slots to whih the products are assigned
-            print(f"distance:{distance}")
             between_prod_distance_matrix[prod_1,prod_2] = distance # this is equal to the distance between the two products
 
     # from door to product
