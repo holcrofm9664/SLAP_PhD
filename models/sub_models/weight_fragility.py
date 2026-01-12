@@ -26,15 +26,23 @@ def weight_fragility(prods_in_aisle:list[int], orders:dict[int,list[int]], crush
     - runtime: the model runtime
     - slot_assignments_dict: the updated assignments dictionary, now containing products assigned to this aisle
     """
-    
+
     # initialising the model
     model = gp.Model("weight_fragility")
 
     model.setParam("OutputFlag", output_flag)
     c = {}
+    print(cluster_assignments)
 
     for i in range(1, len(cluster_assignments) + 1):
         c[i] = cluster_assignments[i-1]
+
+    cluster_sizes = Counter(c.values())
+
+    max_cluster_size = max(cluster_sizes.values())
+
+    if max_cluster_size >= num_bays/2*slot_capacity: # a safety clause such that if more than half of items are in the same cluster it does not cause infeasibility
+        cluster_max_distance = 100
 
     num_products = num_bays * slot_capacity
 
