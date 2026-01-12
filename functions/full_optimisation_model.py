@@ -5,6 +5,7 @@ from functions.tsp import total_distance_for_all_orders
 import numpy as np
 import pandas as pd
 from typing import Tuple
+import time
 
 def full_optimisation_model(product_df:pd.DataFrame, orders:dict[int:tuple[int,int]], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, crushing_multiple:float, cluster_max_distance:int, backtrack_penalty:float, time_limit:float) -> Tuple[dict[int:tuple[int,int]], float, float]:
     """
@@ -28,6 +29,8 @@ def full_optimisation_model(product_df:pd.DataFrame, orders:dict[int:tuple[int,i
     - distance_no_transverse: the distance found after assigning products to aisles, assuming that the warehouse does not contain a transverse
     - distance_transverse: the distabce found after assigning products to specific slots and assuming a transverse aisle exists
     """
+
+    start_full = time.perf_counter()
 
     # ensure that an even number of bays is entered (such that the aisle may be split in half to include the transverse)
     if num_bays % 2 != 0:
@@ -53,6 +56,8 @@ def full_optimisation_model(product_df:pd.DataFrame, orders:dict[int:tuple[int,i
     # run the strict s-shape model to assign products to aisles, as though the warehouse was directional and had no transverse aisle
     status, distance_no_transverse, runtime_first_stage, aisle_assignments_dict = Strict_S_Shape(num_aisles = num_aisles, num_bays = num_bays, slot_capacity = slot_capacity, between_aisle_dist=between_aisle_dist, between_bay_dist=between_bay_dist, orders = orders, time_limit=time_limit)
 
+    start = time.perf_counter()
+
     # initialise the slot assignments dictionary
     slot_assignments_dict = {}
 
@@ -67,12 +72,19 @@ def full_optimisation_model(product_df:pd.DataFrame, orders:dict[int:tuple[int,i
         orders_new = {k:v for k,v in orders_new.items() if v}
 
         # run the within-aisle optimisation model and update the slot assignments dictionary
-        _, _, _, _, slot_assignments_dict = weight_fragility(prods_in_aisle, orders=orders_new, crushing_array=crushing_array, cluster_assignments=cluster_assignments, num_bays=num_bays, slot_capacity=slot_capacity, cluster_max_distance=cluster_max_distance, slot_assignments_dict = slot_assignments_dict, output_flag=False, aisle=aisle)
+        _, _, _, slot_assignments_dict = weight_fragility(prods_in_aisle, orders=orders_new, crushing_array=crushing_array, cluster_assignments=cluster_assignments, num_bays=num_bays, slot_capacity=slot_capacity, cluster_max_distance=cluster_max_distance, slot_assignments_dict = slot_assignments_dict, output_flag=False, aisle=aisle)
+
+    end = time.perf_counter()
 
     # calculate the pairwise product distance matrix assuming now that the warehouse has a transverse bisecting aisles
 
-    between_product_distance_matrix = build_pairwise_product_distance_matrix(slot_assignments_dict = slot_assignments_dict, slots = slots, num_aisles=num_aisles, num_bays=num_bays, slot_capacity=slot_capacity, between_aisle_dict=between_aisle_dist, between_bay_dist=between_bay_dist, backtrack_penalty=backtrack_penalty)
+    between_product_distance_matrix = build_pairwise_product_distance_matrix(slot_assignments_dict = slot_assignments_dict, slots = slots, num_aisles=num_aisles, num_bays=num_bays, slot_capacity=slot_capacity, between_aisle_dist=between_aisle_dist, between_bay_dist=between_bay_dist, backtrack_penalty=backtrack_penalty)
 
     distance_transverse, per_order = total_distance_for_all_orders(orders, between_product_distance_matrix=between_product_distance_matrix)
 
-    return f"Assignments: {slot_assignments_dict}", f"Distance with no transverse: {distance_no_transverse}", f"Distance including the transverse: {distance_transverse}"
+    end_full = time.perf_counter()
+
+    runtime_second_stage = end - start
+    runtime_total = end_full - start_full
+
+    return slot_assignments_dict, distance_no_transverse, distance_transverse, runtime_first_stage, runtime_second_stage, runtime_total
