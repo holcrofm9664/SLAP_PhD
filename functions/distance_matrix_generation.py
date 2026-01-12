@@ -227,7 +227,7 @@ def build_distance_matrix_transverse(num_aisles:int, num_bays:int, between_aisle
     return D_full
 
 
-def build_pairwise_product_distance_matrix(slot_assignments_dict:dict[int,Tuple[int,int]], slots:list[Tuple[int,int]], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, penalty:int) -> np.ndarray:
+def build_pairwise_product_distance_matrix(slot_assignments_dict:dict[int,Tuple[int,int]], slots:list[Tuple[int,int]], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, backtrack_penalty:int) -> np.ndarray:
     """
     Takes the matrix for the pairwise distances between slots in the warehouse and the product assignments to create a new distance matrix for the pairwise distances between products
 
