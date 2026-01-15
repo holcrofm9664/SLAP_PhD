@@ -3,6 +3,7 @@ from gurobipy import GRB
 import numpy as np
 import pandas as pd
 from typing import Tuple, Any
+from itertools import chain
 
 def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, orders:dict[int,list[int]], time_limit = 3600, **unused:Any) -> Tuple[int, float, float, dict[int:Tuple[int,int]]]:
     """
@@ -24,11 +25,7 @@ def Strict_S_Shape(num_aisles:int, num_bays:int, slot_capacity:int, between_aisl
     - aisle_assignments_dict: the assignment of products to aisles
     """
 
-    all_prods = []
-    for i in orders:
-        for j in orders[i]:
-            all_prods.append(j)
-    set_prods = set(all_prods)
+    set_prods = list(set(chain.from_iterable([x for x in orders.values()])))
     num_prods = len(set_prods)
 
     if num_prods > num_aisles * num_bays * slot_capacity:
