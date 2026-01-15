@@ -9,16 +9,14 @@ import time
 
 
 DATA_DF = None
-ORDERS_LIST = None
 
-def init_worker(data_df, orders_dict_list):
-    global DATA_DF, ORDERS_LIST
+def init_worker(data_df):
+    global DATA_DF
     DATA_DF = data_df
-    ORDERS_LIST = orders_dict_list
 
 
 
-def full_optimisation_model(order_idx:int, num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, crushing_multiple:float, cluster_max_dist:int, backtrack_penalty:float, time_limit:float) -> Tuple[dict[int:tuple[int,int]], float, float]:
+def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, crushing_multiple:float, cluster_max_dist:int, backtrack_penalty:float, time_limit:float) -> Tuple[dict[int:tuple[int,int]], float, float]:
     """
     A function which takes in the product attributes, orders, and warehouse dimensions, and runs the full optimisation model to assign products to individual slots and calculate the distance for both the warehouse with the transverse and without
 
@@ -41,7 +39,6 @@ def full_optimisation_model(order_idx:int, num_aisles:int, num_bays:int, slot_ca
     - distance_transverse: the distabce found after assigning products to specific slots and assuming a transverse aisle exists
     """
 
-    orders = ORDERS_LIST[order_idx] # take the correct order set from the globally defined list of orders dictionaries
     product_df = DATA_DF # take the product df from the globally defined variable
 
     num_orders = len(orders)
