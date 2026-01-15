@@ -18,7 +18,7 @@ def generate_orders(num_orders:int, order_size:int, num_products:int, seed:int, 
     count = 1
 
     random.seed(seed)
-    
+
     for order in range(num_orders):
         order = []
         prod_list = list(range(1, num_products + 1))
