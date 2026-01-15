@@ -32,7 +32,6 @@ def weight_fragility(prods_in_aisle:list[int], orders:dict[int,list[int]], crush
 
     model.setParam("OutputFlag", output_flag)
     c = {}
-    print(cluster_assignments)
 
     for i in range(1, len(cluster_assignments) + 1):
         c[i] = cluster_assignments[i-1]
