@@ -1,7 +1,7 @@
 from functions.orders_generation import generate_orders
 import pandas as pd
 
-def generate_instances_parallelisation(A:list, B:list, O:list, Q:list, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, seed:int, product_df:pd.DataFrame, crushing_multiple:float, backtrack_penalty:int, time_limit:int) -> list[tuple]:
+def generate_instances_parallelisation(A:list[int], B:list[int], O:list[int], Q:list[int], slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, seed:int, product_df:pd.DataFrame, crushing_multiple:float, backtrack_penalty:int, time_limit:int) -> list[tuple]:
     """
     Generates all possible combinations of inputs given the user inputs which parameter values they would like to test
 
@@ -46,7 +46,7 @@ def generate_instances_parallelisation(A:list, B:list, O:list, Q:list, slot_capa
 
 
 
-def generate_instances_kwargs(A:list, B:list, O:list, Q:list, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, seed:int, product_df:pd.DataFrame, crushing_multiple:float, backtrack_penalty:int, time_limit:int) -> list[dict]:
+def generate_instances_kwargs(A:list[int], B:list[int], O:list[int], Q:list[int], slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, seed:int, product_df:pd.DataFrame, crushing_multiple:float, backtrack_penalty:int, time_limit:int) -> list[dict]:
     """
     Generates all possible combinations of inputs given the user inputs which parameter values they would like to test
 
@@ -100,7 +100,7 @@ def generate_instances_kwargs(A:list, B:list, O:list, Q:list, slot_capacity:int,
 
 
 
-def generate_single_instance(num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, orders:dict) -> dict:
+def generate_single_instance(num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, orders:dict) -> dict[int, int, int, float, float, dict[int:list[int]]]:
     """
     Generates a single instance given all the relevant inputs
     
