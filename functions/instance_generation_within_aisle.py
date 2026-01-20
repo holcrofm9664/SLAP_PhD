@@ -3,8 +3,23 @@ import numpy as np
 import random
 from collections import Counter
 
-def generate_instance_WASAP(num_bays, slot_capacity, num_orders, order_size, cluster_max_distance, num_clusters, seed):
+def generate_instance_WASAP(num_bays:int, slot_capacity:int, num_orders:int, order_size:int, cluster_max_distance:int, num_clusters:int, seed:int) -> dict[dict[int,list[int]], np.ndarray[int], list[int], int, int, int]:
+    """
+    Creates a single instance on which the within-aisle storage assignment model may be run
 
+    Inputs:
+    - num_bays: the number of bays the aisle is divided into
+    - slot_capacity: the capacity of each bay
+    - num_orders: the number of orders we wish to generate
+    - order_size: the size of the orders we wish to generate
+    - cluster_max_distance: the maximum distance two products within the same cluster may be placed apart from each other
+    - num_clusters: the number of clusters into which we wish to divide products
+    - seed: the seed used in orders generation
+    
+    Outputs:
+    - a dictionary containing all of the required inputs for the within-aisle assignment model
+    """
+    
     num_products = slot_capacity * num_bays
 
     orders = generate_orders(num_orders = num_orders, order_size = order_size, num_products = num_products, seed = seed)
