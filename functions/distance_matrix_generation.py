@@ -12,7 +12,7 @@ def dist_i_j_strict_s_shape(i:int, j:int, num_bays:int, between_aisle_dist:float
     - num_bays: the number of bays per aisle in the warehouse
     - between_aisle_dist: the distance between consecutive aisles in the warehouse
     - between_bay_dist: the distance between consecutive bays in the warehouse
-    - big_M: a non-infinite value that forbids backtracking in the warehouse. This allows the distance matrix to be used with a MILP solver (i.e. Gurobi)
+    - big_M: a finite value that forbids backtracking in the warehouse. This allows the distance matrix to be used with a MILP solver (i.e. Gurobi)
 
     Outputs:
     - the distance between the two bays
@@ -45,7 +45,7 @@ def build_distance_matrix(pairwise_distance_function:Callable, num_aisles:int, n
     - slot_capacity: the capacity of each slot in the warehouse. The standard is 2
     - between_aisle_dist: the distance between consecutive aisles in the warehouse
     - between_bay_dist: the distance between consecutive bays in the warehouse
-    - big_M: a non-infinite value that forbids backtracking in the warehouse. This allows the distance matrix to be used with a MILP solver (i.e. Gurobi)
+    - big_M: a finite value that forbids backtracking in the warehouse. This allows the distance matrix to be used with a MILP solver (i.e. Gurobi)
 
     Outputs:
     - a pairwise distance matrix for the specific warehouse structure
@@ -73,7 +73,7 @@ def build_distance_matrix_transverse(num_aisles:int, num_bays:int, between_aisle
     - num_bays: the number of bays in the warehouse
     - between_aisle_distance: the distance between consecutive aisles in the warehouse
     - between_bay_distance: the distance between consecutive bays in the warehouse
-    - penalty: the penalty associated with going the wrong way down directional aisles. This is not set to inf to allow use in Gurobi models
+    - backtrack_penalty: the penalty associated with going the wrong way down directional aisles. This is not set to inf to allow use in Gurobi models
 
     Outputs:
     - distance_matrix: the matrix of pairwise distances between all slots in the warehouse
@@ -238,7 +238,7 @@ def build_pairwise_product_distance_matrix(slot_assignments_dict:dict[int,Tuple[
     - slot_capacity: the capacity of a single slot in the warehouse. The standard is two
     - between_aisle_dist: the distance between consecutive aisles in the warehouse
     - between_bay_dist: the distance between two consecutive bays in the warehouse
-    - penalty: the penalty enforcing aisle directionality
+    - backtrack_penalty: the penalty enforcing aisle directionality
 
     Outputs:
     - distance_matrix: the matrix of pairwise distances between products in the warehouse
