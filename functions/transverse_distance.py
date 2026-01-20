@@ -2,7 +2,7 @@ from functions.distance_matrix_generation import build_pairwise_product_distance
 from functions.tsp import total_distance_for_all_orders
 import random
 
-def transverse_distance_using_fixed_aisle_assignments(orders:dict[int,list[int]], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, aisle_assignments:dict[int,int], penalty:int) -> float:
+def transverse_distance_using_fixed_aisle_assignments(orders:dict[int,list[int]], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, aisle_assignments:dict[int,int], backtrack_penalty:int) -> float:
     """
     A function which takes in the fixed aisle assignments calculated by the Strict S-Shape model and calculates what the distance would be should the warehouse 
     have the option of using a transverse when routing.
@@ -15,7 +15,7 @@ def transverse_distance_using_fixed_aisle_assignments(orders:dict[int,list[int]]
     - between_aisle_dist: the distance between consecutive aisles within the warehouse
     - between_bay_distance: the distance between consecutive bays in the warehouse
     - aisle_assignments: the assignments of products to aisles from the Strict S-Shape model
-    - penalty: the penalty to be used in the pairwise slot distance matrix to enforce aisle directionality
+    - backtrack_penalty: the penalty to be used in the pairwise slot distance matrix to enforce aisle directionality
 
     Outputs:
     - distance_transverse: the total distance if a transverse may be used to route between slots
@@ -43,7 +43,7 @@ def transverse_distance_using_fixed_aisle_assignments(orders:dict[int,list[int]]
 
     slot_assignments = aisle_to_slot_assignments(aisle_assignments,num_bays, num_aisles, slot_capacity)
 
-    M = build_pairwise_product_distance_matrix(slot_assignments, num_aisles, num_bays, slot_capacity, between_aisle_dist, between_bay_dist, 1000)
+    M = build_pairwise_product_distance_matrix(slot_assignments, num_aisles, num_bays, slot_capacity, between_aisle_dist, between_bay_dist, backtrack_penalty)
 
     distance_transverse, per_order_transverse = total_distance_for_all_orders(orders, M)
 
