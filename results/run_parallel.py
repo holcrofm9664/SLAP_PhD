@@ -2,6 +2,7 @@ from functions.instance_generation import generate_instances_parallelisation
 from functions.orders_generation import generate_orders
 from multiprocessing import Pool
 import os
+import sys
 from itertools import product
 import pandas as pd
 from results.worker import init_worker, full_optimisation_model
@@ -53,7 +54,8 @@ def run(product_df, A, B, O, Q, slot_capacity, between_aisle_dist, between_bay_d
                         seed = seed
                         )
     
-    num_workers = os.environ.get("SLURM_CPUS_PER_TASK", os.cpu_count() or 1)
+    #num_workers = os.environ.get("SLURM_CPUS_PER_TASK", os.cpu_count() or 1)
+    num_workers = int(sys.argv[1])
 
     with Pool(
         processes=num_workers,
