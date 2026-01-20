@@ -6,6 +6,10 @@ import numpy as np
 import pandas as pd
 from typing import Tuple
 import time
+from data.dataframe_conversion import read_in_parquet_dataframe
+
+DATA_DF = read_in_parquet_dataframe("data/prod_df.parquet")
+
 
 def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, crushing_multiple:float, cluster_max_dist:int, backtrack_penalty:float, time_limit:float) -> Tuple[dict[int:tuple[int,int]], float, float]:
     """
@@ -29,6 +33,8 @@ def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num
     - distance_no_transverse: the distance found after assigning products to aisles, assuming that the warehouse does not contain a transverse
     - distance_transverse: the distabce found after assigning products to specific slots and assuming a transverse aisle exists
     """
+
+    product_df = DATA_DF
 
     num_orders = len(orders)
     order_size = len(orders[1])
