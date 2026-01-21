@@ -28,3 +28,29 @@ def generate_orders(num_orders:int, order_size:int, num_products:int, seed:int, 
         count += 1
 
     return Orders
+
+
+def reduce_orders(orders:dict[int:list[int]], aisle:int, aisle_assignments_dict:dict[int:list[int]]):
+    """
+    Takes the full dictionary of orders arriving in the warehouse and the aisle we are optimising, and removes all but the products stored on the aisle (and deletes empty orders)
+
+    Inputs:
+    - orders: the dictionary of all orders being used in the full warehouse optimisation
+    - aisle: the aisle we are optimising
+    - aisle_assignments_dict: the dictionary containing the aisles as keys and products assigned to each aisle stored as integers in a list as the values
+
+    Output: 
+    - The reduced orders, including now only products assigned to that aisle
+    - The products assigned to the aisle
+    """
+
+    orders_new = orders.copy()
+    prods_in_aisle = aisle_assignments_dict[aisle]
+    for order in orders_new: # remove products not in the aisle from orders
+        prods = orders_new[order]
+        prods_new = [x for x in prods if x in prods_in_aisle]
+        orders_new[order] = prods_new
+    # delete empty orders
+    orders_new = {k:v for k,v in orders_new.items() if v}
+
+    return orders_new, prods_in_aisle
