@@ -4,7 +4,7 @@ from gurobipy import GRB
 from typing import Tuple
 from collections import Counter
 
-def weight_fragility(prods_in_aisle:list[int], orders:dict[int,list[int]], crushing_array:np.ndarray[int], cluster_assignments:list[int], num_bays:int, slot_capacity:int, cluster_max_distance:int, aisle:int, slot_assignments_dict:dict[int:tuple[int,int]], output_flag:bool) -> Tuple[int, float, list[tuple[int,int]]]:
+def weight_fragility(prods_in_aisle:list[int], orders:dict[int,list[int]], crushing_array:np.ndarray[int], cluster_assignments:list[int], num_bays:int, slot_capacity:int, cluster_max_distance:int, aisle:int, output_flag:bool) -> Tuple[int, float, list[tuple[int,int]]]:
     """
     The second stage model which assigns products to bays within one aisle (to which they were assigned in the first stage). 
     
@@ -102,6 +102,9 @@ def weight_fragility(prods_in_aisle:list[int], orders:dict[int,list[int]], crush
     if model.Status != 2:
         model.computeIIS()
         model.write("infeasible.ilp")
+
+    # create an empty slot assignments dict for assignments for this aisle only
+    slot_assignments_dict = {}
 
     if aisle % 2 == 1:
         for i in I:
