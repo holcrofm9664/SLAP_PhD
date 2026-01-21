@@ -48,14 +48,13 @@ def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num
         return "NA", "NA", "NA"
 
     # get the number of products and the slot (aisle, bay) tuple pairs
-    num_prods = num_aisles*num_bays*slot_capacity
     slots = [(x,y) for x in range(1,num_aisles+1) for y in range(1, num_bays+1)]
     
     # extract the product clusters and weights from the product attributes dataframe
     cluster_assignments = list(product_df["prod_cluster"])
 
     # run the strict s-shape model to assign products to aisles, as though the warehouse was directional and had no transverse aisle
-    status, distance_no_transverse, runtime_first_stage, aisle_assignments_dict = Strict_S_Shape(num_aisles = num_aisles, num_bays = num_bays, slot_capacity = slot_capacity, between_aisle_dist=between_aisle_dist, between_bay_dist=between_bay_dist, orders = orders, time_limit=time_limit)
+    _, distance_no_transverse, runtime_first_stage, aisle_assignments_dict = Strict_S_Shape(num_aisles = num_aisles, num_bays = num_bays, slot_capacity = slot_capacity, between_aisle_dist=between_aisle_dist, between_bay_dist=between_bay_dist, orders = orders, time_limit=time_limit)
 
     start = time.perf_counter()
 
@@ -77,7 +76,7 @@ def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num
 
     between_product_distance_matrix = build_pairwise_product_distance_matrix(slot_assignments_dict = slot_assignments_dict, slots = slots, num_aisles=num_aisles, num_bays=num_bays, slot_capacity=slot_capacity, between_aisle_dist=between_aisle_dist, between_bay_dist=between_bay_dist, backtrack_penalty=backtrack_penalty)
 
-    distance_transverse, per_order = total_distance_for_all_orders(orders, between_product_distance_matrix=between_product_distance_matrix)
+    distance_transverse, _ = total_distance_for_all_orders(orders, between_product_distance_matrix=between_product_distance_matrix)
 
     end_full = time.perf_counter()
 
