@@ -6,9 +6,8 @@ import numpy as np
 import pandas as pd
 from typing import Tuple
 import time
-from data.dataframe_conversion import read_in_parquet_dataframe
 
-DATA_DF = read_in_parquet_dataframe("data/prod_df.parquet")
+DATA_DF = pd.read_parquet("data/prod_df.parquet")
 
 
 def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, crushing_multiple:float, cluster_max_dist:int, backtrack_penalty:float, time_limit:float) -> Tuple[dict[int:tuple[int,int]], float, float]:
@@ -34,7 +33,7 @@ def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num
     - distance_transverse: the distabce found after assigning products to specific slots and assuming a transverse aisle exists
     """
 
-    product_df = DATA_DF
+    product_df = DATA_DF # take the product df from the globally defined variable
 
     num_orders = len(orders)
     order_size = len(orders[1])
@@ -42,6 +41,7 @@ def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num
     start_full = time.perf_counter()
 
     # ensure that an even number of bays is entered (such that the aisle may be split in half to include the transverse)
+    
     if num_bays % 2 != 0:
         print("The warehouse must have an even number of bays")
         return "NA", "NA", "NA"
@@ -51,8 +51,8 @@ def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num
     slots = [(x,y) for x in range(1,num_aisles+1) for y in range(1, num_bays+1)]
     
     # extract the product clusters and weights from the product attributes dataframe
-    cluster_assignments = list(product_df["cluster"])
-    weights = list(product_df["weight"])
+    cluster_assignments = list(product_df["prod_cluster"])
+    weights = list(product_df["prod_weight"])
 
     # create the crushing array based on product weights
     crushing_array = np.zeros((num_prods, num_prods))
@@ -81,7 +81,10 @@ def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num
         orders_new = {k:v for k,v in orders_new.items() if v}
 
         # run the within-aisle optimisation model and update the slot assignments dictionary
-        _, _, _, slot_assignments_dict = weight_fragility(prods_in_aisle, orders=orders_new, crushing_array=crushing_array, cluster_assignments=cluster_assignments, num_bays=num_bays, slot_capacity=slot_capacity, cluster_max_distance=cluster_max_dist, slot_assignments_dict = slot_assignments_dict, output_flag=False, aisle=aisle)
+        _, _, _, slot_assignments_dict_aisle = weight_fragility(prods_in_aisle, orders=orders_new, crushing_array=crushing_array, cluster_assignments=cluster_assignments, num_bays=num_bays, slot_capacity=slot_capacity, cluster_max_distance=cluster_max_dist, output_flag=False, aisle=aisle)
+
+        # update the slot assignments dict with assignments from that aisle
+        slot_assignments_dict.update(slot_assignments_dict_aisle)
 
     end = time.perf_counter()
 
@@ -96,4 +99,16 @@ def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num
     runtime_second_stage = end - start
     runtime_total = end_full - start_full
 
-    return slot_assignments_dict, distance_no_transverse, distance_transverse, runtime_first_stage, runtime_second_stage, runtime_total, num_aisles, num_bays, num_orders, order_size
+    returns_dict = {"slot_assignments_dict":slot_assignments_dict,
+                    "distance_no_transverse":distance_no_transverse,
+                    "distance_transverse":distance_transverse,
+                    "runtime_first_stage":runtime_first_stage,
+                    "runtime_second_stage":runtime_second_stage,
+                    "runtime_total":runtime_total,
+                    "num_aisles":num_aisles,
+                    "num_bays":num_bays,
+                    "num_orders":num_orders,
+                    "order_size":order_size
+    }
+
+    return returns_dict
