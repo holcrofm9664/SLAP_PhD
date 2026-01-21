@@ -47,6 +47,8 @@ def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num
     start_full = time.perf_counter()
 
     # ensure that an even number of bays is entered (such that the aisle may be split in half to include the transverse)
+    
+    
     if num_bays % 2 != 0:
         print("The warehouse must have an even number of bays")
         return "NA", "NA", "NA"
@@ -86,7 +88,10 @@ def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num
         orders_new = {k:v for k,v in orders_new.items() if v}
 
         # run the within-aisle optimisation model and update the slot assignments dictionary
-        _, _, _, slot_assignments_dict = weight_fragility(prods_in_aisle, orders=orders_new, crushing_array=crushing_array, cluster_assignments=cluster_assignments, num_bays=num_bays, slot_capacity=slot_capacity, cluster_max_distance=cluster_max_dist, slot_assignments_dict = slot_assignments_dict, output_flag=False, aisle=aisle)
+        _, _, _, slot_assignments_dict_aisle = weight_fragility(prods_in_aisle, orders=orders_new, crushing_array=crushing_array, cluster_assignments=cluster_assignments, num_bays=num_bays, slot_capacity=slot_capacity, cluster_max_distance=cluster_max_dist, output_flag=False, aisle=aisle)
+
+        # update the slot assignments dict with assignments from that aisle
+        slot_assignments_dict.update(slot_assignments_dict_aisle)
 
     end = time.perf_counter()
 
