@@ -1,5 +1,6 @@
 from functions.instance_generation import generate_instances_parallelisation
 from functions.orders_generation import generate_orders
+from functions.sub_model_functions.crushing_array import generate_crushing_array
 from multiprocessing import Pool
 import os
 import sys
@@ -11,7 +12,7 @@ import json
 
 
 
-def build_tasks(A, B, O, Q, slot_capacity, between_aisle_dist, between_bay_dist, crushing_multiple, backtrack_penalty, time_limit, seed):
+def build_tasks(weights, A, B, O, Q, slot_capacity, between_aisle_dist, between_bay_dist, crushing_multiple, backtrack_penalty, time_limit, seed):
     for num_orders, order_size, num_aisles, num_bays in product(O, Q, A, B):
 
         num_products = num_aisles * num_bays * 2
@@ -23,6 +24,9 @@ def build_tasks(A, B, O, Q, slot_capacity, between_aisle_dist, between_bay_dist,
         orders = generate_orders(num_orders, order_size, num_products, seed)
 
         cluster_max_dist = num_bays/2
+        num_prods = num_aisles * num_bays * 2
+
+        crushing_array = generate_crushing_array(num_prods, weights, crushing_multiple)
 
         yield (
             orders,
@@ -31,17 +35,18 @@ def build_tasks(A, B, O, Q, slot_capacity, between_aisle_dist, between_bay_dist,
             slot_capacity,
             between_aisle_dist,
             between_bay_dist, 
-            crushing_multiple,
             cluster_max_dist,
             backtrack_penalty,
             time_limit,
+            crushing_array,
         )
 
 
 
 def run(product_df, A, B, O, Q, slot_capacity, between_aisle_dist, between_bay_dist, crushing_multiple, backtrack_penalty, time_limit, chunksize, seed):
     
-    tasks = build_tasks(A = A,
+    tasks = build_tasks(weights = product_df["prod_weight"],
+                        A = A,
                         B = B,
                         O = O,
                         Q = Q,
@@ -54,8 +59,8 @@ def run(product_df, A, B, O, Q, slot_capacity, between_aisle_dist, between_bay_d
                         seed = seed
                         )
     
-    #num_workers = os.environ.get("SLURM_CPUS_PER_TASK", os.cpu_count() or 1)
-    num_workers = int(sys.argv[1])
+    num_workers = os.environ.get("SLURM_CPUS_PER_TASK", os.cpu_count() or 1)
+    #num_workers = int(sys.argv[1])
 
     with Pool(
         processes=num_workers,
