@@ -10,7 +10,7 @@ import time
 DATA_DF = pd.read_parquet("data/prod_df.parquet")
 
 
-def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, crushing_multiple:float, cluster_max_dist:int, backtrack_penalty:float, time_limit:float) -> Tuple[dict[int:tuple[int,int]], float, float]:
+def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num_bays:int, slot_capacity:int, between_aisle_dist:float, between_bay_dist:float, cluster_max_dist:int, backtrack_penalty:float, time_limit:float, crushing_array:np.ndarray[int]) -> Tuple[dict[int:tuple[int,int]], float, float]:
     """
     A function which takes in the product attributes, orders, and warehouse dimensions, and runs the full optimisation model to assign products to individual slots and calculate the distance for both the warehouse with the transverse and without
 
@@ -22,10 +22,10 @@ def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num
     - slot_capacity: the number of products able to be assigned to each (aisle,bay) pair. The standard is 2
     - between_aisle_dist: the distance between two consecutive aisles
     - between_bay_dist: the distance between two consecutive bays
-    - crushing_multiple: how much heavier (in multiples of the lighter product's weight) a heavier product needs to be to crush it. Used to make the crushing array
     - cluster_max_dist: the maximum distance apart two products within the same cluster two products can be placed within one aisle
     - backtrack_penalty: the penalty for backtracking against a one-way system 
     - time_limit: the time allocated for the assignment of products to aisles
+    - crushing_array: the array indicating which products are able to crush other products
 
     Outputs:
     - slot_assignments_dict: the dictionary containing the assignments of products to slots
@@ -52,15 +52,6 @@ def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num
     
     # extract the product clusters and weights from the product attributes dataframe
     cluster_assignments = list(product_df["prod_cluster"])
-    weights = list(product_df["prod_weight"])
-
-    # create the crushing array based on product weights
-    crushing_array = np.zeros((num_prods, num_prods))
-
-    for prod_1 in range(num_prods):
-        for prod_2 in range(num_prods):
-            if weights[prod_2] >= crushing_multiple*weights[prod_1]: # for now, one product is assumed able to crush another if it weighs twice as much
-                crushing_array[prod_1, prod_2] = 1
 
     # run the strict s-shape model to assign products to aisles, as though the warehouse was directional and had no transverse aisle
     status, distance_no_transverse, runtime_first_stage, aisle_assignments_dict = Strict_S_Shape(num_aisles = num_aisles, num_bays = num_bays, slot_capacity = slot_capacity, between_aisle_dist=between_aisle_dist, between_bay_dist=between_bay_dist, orders = orders, time_limit=time_limit)
