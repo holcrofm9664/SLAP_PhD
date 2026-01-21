@@ -1,6 +1,8 @@
 import json
 import pandas as pd
 
+# for the .parquet dataframe created by the full optimisation model
+# to read in a standard .parquet file (such as prod_df.parquet), use pd.read_parquet("file_path")
 def read_in_parquet_dataframe(dataframe_path:str):
     df = pd.read_parquet(dataframe_path)
 
