@@ -2,6 +2,7 @@ from functions.distance_matrix_generation import build_pairwise_product_distance
 from models.full_models.strict_s_shape import Strict_S_Shape
 from models.sub_models.weight_fragility import weight_fragility
 from functions.tsp import total_distance_for_all_orders
+from functions.orders_generation import reduce_orders
 import numpy as np
 import pandas as pd
 from typing import Tuple
@@ -62,17 +63,10 @@ def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num
     slot_assignments_dict = {}
 
     for aisle in range(1, num_aisles+1): # run the within-aisle optimisation model for each aisle
-        orders_new = orders.copy() # copy the set of orders
-        prods_in_aisle = aisle_assignments_dict[aisle] # extract the products stored in the aisle
-        for order in orders_new: # remove products not in the aisle from orders
-            prods = orders_new[order]
-            prods_new = [x for x in prods if x in prods_in_aisle]
-            orders_new[order] = prods_new
-        # delete empty orders
-        orders_new = {k:v for k,v in orders_new.items() if v}
+        orders_new, prods_in_aisle = reduce_orders(orders, aisle, aisle_assignments_dict)
 
         # run the within-aisle optimisation model and update the slot assignments dictionary
-        _, _, _, slot_assignments_dict_aisle = weight_fragility(prods_in_aisle, orders=orders_new, crushing_array=crushing_array, cluster_assignments=cluster_assignments, num_bays=num_bays, slot_capacity=slot_capacity, cluster_max_distance=cluster_max_dist, output_flag=False, aisle=aisle)
+        _, _, _, slot_assignments_dict_aisle = weight_fragility(prods_in_aisle = prods_in_aisle, orders=orders_new, crushing_array=crushing_array, cluster_assignments=cluster_assignments, num_bays=num_bays, slot_capacity=slot_capacity, cluster_max_distance=cluster_max_dist, output_flag=False, aisle=aisle)
 
         # update the slot assignments dict with assignments from that aisle
         slot_assignments_dict.update(slot_assignments_dict_aisle)
