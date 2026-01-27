@@ -66,15 +66,19 @@ def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num
 
     # initialise the slot assignments dictionary
     slot_assignments_dict = {}
+    crushes = 0
 
     for aisle in range(1, num_aisles+1): # run the within-aisle optimisation model for each aisle
         orders_new, prods_in_aisle = reduce_orders(orders, aisle, aisle_assignments_dict)
 
         # run the within-aisle optimisation model and update the slot assignments dictionary
-        _, _, _, slot_assignments_dict_aisle = weight_fragility(prods_in_aisle = prods_in_aisle, orders=orders_new, crushing_array=crushing_array, cluster_assignments=cluster_assignments, num_bays=num_bays, slot_capacity=slot_capacity, cluster_max_distance=cluster_max_dist, output_flag=False, aisle=aisle)
+        _, objective, _, slot_assignments_dict_aisle = weight_fragility(prods_in_aisle = prods_in_aisle, orders=orders_new, crushing_array=crushing_array, cluster_assignments=cluster_assignments, num_bays=num_bays, slot_capacity=slot_capacity, cluster_max_distance=cluster_max_dist, output_flag=False, aisle=aisle)
 
         # update the slot assignments dict with assignments from that aisle
         slot_assignments_dict.update(slot_assignments_dict_aisle)
+
+        # update total crushing incidents
+        crushes += objective
 
     end = time.perf_counter()
 
@@ -95,6 +99,7 @@ def full_optimisation_model(orders:dict[int:tuple[int,int]], num_aisles:int, num
                     "runtime_first_stage":runtime_first_stage,
                     "runtime_second_stage":runtime_second_stage,
                     "runtime_total":runtime_total,
+                    "crushing_incidents":crushes,
                     "num_aisles":num_aisles,
                     "num_bays":num_bays,
                     "num_orders":num_orders,
