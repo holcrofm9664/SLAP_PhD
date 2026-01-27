@@ -99,15 +99,15 @@ def main(A, B, O, Q, slot_capacity, between_aisle_dist, between_bay_dist, crushi
     
     df["slot_assignments_dict"] = df["slot_assignments_dict"].apply(slot_dict_to_json)
 
-    df.to_parquet("data/test_output.parquet", index = False)  # error here
+    df.to_parquet("data/optimisation_output.parquet", index = False)  # error here
 
     return df
 
 
 if __name__ == "__main__":
     main(
-        A = [1,3,5],
-        B = [2,4,6],
+        A = [1,3,5,7],
+        B = [2,4,6,8],
         O = [1,3,5],
         Q = [3,5,10],
         slot_capacity = 2,
