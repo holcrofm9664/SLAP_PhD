@@ -4,14 +4,15 @@
 #SBATCH --mail-user=m.holcroft@lancaster.ac.uk
 #SBATCH -c 25
 #SBATCH --mem-per-cpu=3GB
-#SBATCH -o ./output_scripts/mytestjob.out
+#SBATCH -o /beegfs/client/default/holcrofm/PhD/results/logs/%x-%j.out
+#SBATCH -e /beegfs/client/default/holcrofm/PhD/results/logs/%x-%j.err
 
+
+cd ~/PhD
 
 # Activate virtual environment
-source ~/start-pyenv
-source ~/venvs/warehouse/bin/activate
-
-mkdir -p logs
+source ~/PhD/.env/bin/activate
+export PYTHONPATH="$HOME/PhD:$PYTHONPATH"
 
 # export OMP_NUM_THREADS=1
 # export MKL_NUM_THREADS=1
@@ -23,4 +24,4 @@ mkdir -p logs
 
 # Run the code
 
-srun python run_parallel.py 24
+srun python results/run_parallel.py 24

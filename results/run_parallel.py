@@ -61,6 +61,7 @@ def run(product_df, A, B, O, Q, slot_capacity, between_aisle_dist, between_bay_d
     
     num_workers = os.environ.get("SLURM_CPUS_PER_TASK", os.cpu_count() or 1)
     #num_workers = int(sys.argv[1])
+    num_workers = int(num_workers)
 
     with Pool(
         processes=num_workers,
