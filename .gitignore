@@ -39,3 +39,5 @@ Thumbs.db
 
 # Jupyter Notebook used for messing around/trying new code
 Messing_Around.ipynb
+data/demand_history.xlsx
+storm_rsync.txt
